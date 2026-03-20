@@ -4,7 +4,9 @@ const providers = [
       name: "Rahim Plumbing",
       category: "Plumbing",
       rating: 4.8,
-      price: 500,
+      serviceFee: 500,
+      platformFee: 50,
+      taxes: 25,
       includes: ["Pipe check", "Leak fixing", "Basic tools included"]
     },
     {
@@ -12,7 +14,9 @@ const providers = [
       name: "Cool Air AC Service",
       category: "AC Repair",
       rating: 4.5,
-      price: 1200,
+      serviceFee: 1200,
+      platformFee: 100,
+      taxes: 60,
       includes: ["AC inspection", "Cleaning", "Basic servicing"]
     },
     {
@@ -20,7 +24,9 @@ const providers = [
       name: "Home Clean Expert",
       category: "Home Cleaning",
       rating: 4.9,
-      price: 800,
+      serviceFee: 800,
+      platformFee: 80,
+      taxes: 40,
       includes: ["Room cleaning", "Floor cleaning", "Dusting"]
     },
     {
@@ -28,7 +34,9 @@ const providers = [
       name: "Math Tutor Sami",
       category: "Tutoring",
       rating: 4.7,
-      price: 1000,
+      serviceFee: 1000,
+      platformFee: 90,
+      taxes: 50,
       includes: ["1 hour class", "Notes support", "Practice help"]
     },
     {
@@ -36,7 +44,9 @@ const providers = [
       name: "Electric Fix BD",
       category: "Electrical",
       rating: 4.6,
-      price: 700,
+      serviceFee: 700,
+      platformFee: 70,
+      taxes: 35,
       includes: ["Wiring check", "Switch fixing", "Basic repair"]
     },
     {
@@ -44,7 +54,9 @@ const providers = [
       name: "Fast Plumbing Help",
       category: "Plumbing",
       rating: 4.4,
-      price: 450,
+      serviceFee: 450,
+      platformFee: 40,
+      taxes: 20,
       includes: ["Tap fixing", "Water flow check", "Basic tools included"]
     }
   ];
