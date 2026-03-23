@@ -1,0 +1,24 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Install server deps",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d e:\\fixit\\Fixit-\\server && npm install"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "server-install",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"install"
+			],
+			"isBackground": false
+		}
+	]
+}
