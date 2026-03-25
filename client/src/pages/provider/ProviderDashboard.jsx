@@ -37,38 +37,56 @@ function ServiceForm({ initial, onSave, onCancel }) {
 
   return (
     <div className={styles.serviceForm}>
-      <input
-        className={styles.input}
-        type="text"
-        name="title"
-        placeholder="Service title"
-        value={form.title}
-        onChange={handleChange}
-      />
-      <input
-        className={styles.input}
-        type="text"
-        name="category"
-        placeholder="Category"
-        value={form.category}
-        onChange={handleChange}
-      />
-      <input
-        className={styles.input}
-        type="number"
-        name="price"
-        placeholder="Price"
-        value={form.price}
-        onChange={handleChange}
-      />
-      <textarea
-        className={styles.textarea}
-        name="description"
-        rows={4}
-        placeholder="Description"
-        value={form.description}
-        onChange={handleChange}
-      />
+      <div className={styles.formRow}>
+        <label className={styles.field}>
+          <span className={styles.fieldLabel}>Service Title</span>
+          <input
+            className={styles.input}
+            type="text"
+            name="title"
+            placeholder="Deep Cleaning"
+            value={form.title}
+            onChange={handleChange}
+          />
+        </label>
+
+        <label className={styles.field}>
+          <span className={styles.fieldLabel}>Category</span>
+          <input
+            className={styles.input}
+            type="text"
+            name="category"
+            placeholder="Cleaning"
+            value={form.category}
+            onChange={handleChange}
+          />
+        </label>
+      </div>
+
+      <label className={styles.field}>
+        <span className={styles.fieldLabel}>Price (BDT)</span>
+        <input
+          className={styles.input}
+          type="number"
+          name="price"
+          placeholder="800"
+          value={form.price}
+          onChange={handleChange}
+        />
+      </label>
+
+      <label className={styles.field}>
+        <span className={styles.fieldLabel}>Service Description</span>
+        <textarea
+          className={styles.textarea}
+          name="description"
+          rows={4}
+          placeholder="Describe your service quality, tools, and expected outcomes"
+          value={form.description}
+          onChange={handleChange}
+        />
+      </label>
+
       <div className={styles.formBtns}>
         <button type="button" className={styles.btnPrimary} onClick={() => onSave(form)}>
           Save
