@@ -40,12 +40,42 @@ const buttonStyle = {
   cursor: 'pointer',
 };
 
+const roleToggleContainerStyle = {
+  display: 'flex',
+  gap: '10px',
+  marginBottom: '20px',
+  background: '#f1f5f9',
+  padding: '6px',
+  borderRadius: '12px',
+};
+
+const getRoleButtonStyle = (isActive) => ({
+  flex: 1,
+  padding: '10px',
+  border: 'none',
+  borderRadius: '8px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  background: isActive ? '#ffffff' : 'transparent',
+  color: isActive ? '#2563eb' : '#64748b',
+  boxShadow: isActive ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+  transition: 'all 0.2s',
+});
+
 export default function LoginPage() {
-  const [email, setEmail] = useState('mahadi@test.com');
-  const [password, setPassword] = useState('password123');
+  const [role, setRole] = useState('customer');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleRoleChange = (newRole) => {
+    setRole(newRole);
+    setError('');
+    setEmail('');
+    setPassword('');
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -53,10 +83,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { data } = await api.post('/auth/login', { email, password });
+      const { data } = await api.post('/auth/login', { email, password, role });
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/provider/dashboard', { replace: true });
+      
+      if (data.user.role === 'provider') {
+        navigate('/provider/dashboard', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (err) {
       setError(err?.response?.data?.message || 'Login failed');
     } finally {
@@ -67,10 +102,27 @@ export default function LoginPage() {
   return (
     <div style={boxStyle}>
       <form style={cardStyle} onSubmit={onSubmit}>
-        <h2 style={{ marginTop: 0, marginBottom: 4 }}>Provider Login</h2>
-        <p style={{ marginTop: 0, color: '#475569' }}>Use demo credentials to continue.</p>
+        <h2 style={{ marginTop: 0, marginBottom: 20, textAlign: 'center' }}>Welcome Back</h2>
 
-        <label htmlFor="email">Email</label>
+        <div style={roleToggleContainerStyle}>
+          <button 
+            type="button" 
+            style={getRoleButtonStyle(role === 'customer')}
+            onClick={() => handleRoleChange('customer')}
+          >
+            Customer
+          </button>
+          <button 
+            type="button" 
+            style={getRoleButtonStyle(role === 'provider')}
+            onClick={() => handleRoleChange('provider')}
+          >
+            Provider
+          </button>
+        </div>
+
+
+        <label htmlFor="email" style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>Email</label>
         <input
           id="email"
           type="email"
@@ -80,7 +132,7 @@ export default function LoginPage() {
           required
         />
 
-        <label htmlFor="password">Password</label>
+        <label htmlFor="password" style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>Password</label>
         <input
           id="password"
           type="password"
@@ -91,7 +143,7 @@ export default function LoginPage() {
         />
 
         {error ? (
-          <p style={{ marginTop: 0, marginBottom: 12, color: '#dc2626', fontWeight: 600 }}>{error}</p>
+          <p style={{ marginTop: 0, marginBottom: 12, color: '#dc2626', fontWeight: 600, fontSize: '14px' }}>{error}</p>
         ) : null}
 
         <button type="submit" disabled={loading} style={buttonStyle}>

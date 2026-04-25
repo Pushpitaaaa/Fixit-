@@ -58,5 +58,30 @@ export const uploadPortfolioPhoto = async (formData) => {
   const { data } = await api.post('/provider/portfolio', formData);
   return data;
 };
+// 🔹 CUSTOMER FEATURES
 
+export const getAllServices = async () => {
+  const { data } = await api.get('/provider/public/services');
+  return data;
+};
+
+export const getServicesByCategory = async (category) => {
+  const { data } = await api.get(`/provider/public/services/category/${category}`);
+  return data;
+};
+
+export const searchServices = async (keyword) => {
+  const { data } = await api.get(`/provider/public/services/search/${keyword}`);
+  return data;
+};
+
+export const getServiceById = async (id) => {
+  const { data } = await api.get(`/provider/public/services/${id}`);
+  return data;
+};
+
+export const getTopProviders = async () => {
+  const { data } = await api.get('/provider/public/top-providers');
+  return data;
+};
 export default api;

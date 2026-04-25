@@ -204,6 +204,69 @@ const uploadPortfolioPhoto = async (req, res) => {
   }
 };
 
+// CUSTOMER FEATURES
+
+const getAllServices = async (req, res) => {
+  try {
+    return res.json(providerData.services);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const getServicesByCategory = async (req, res) => {
+  try {
+    const category = req.params.category.toLowerCase();
+
+    const filtered = providerData.services.filter(
+      (s) => s.category.toLowerCase() === category
+    );
+
+    return res.json(filtered);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const searchServices = async (req, res) => {
+  try {
+    const keyword = req.params.keyword.toLowerCase();
+
+    const results = providerData.services.filter(
+      (s) =>
+        s.title.toLowerCase().includes(keyword) ||
+        s.category.toLowerCase().includes(keyword) ||
+        s.description.toLowerCase().includes(keyword)
+    );
+
+    return res.json(results);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const getServiceById = async (req, res) => {
+  try {
+    const service = providerData.services.find((s) => s._id === req.params.id);
+
+    if (!service) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+
+    return res.json(service);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const getTopProviders = async (req, res) => {
+  try {
+    return res.json([providerData]);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getDashboard,
   toggleOpen,
@@ -214,4 +277,9 @@ module.exports = {
   respondToBooking,
   getEarnings,
   uploadPortfolioPhoto,
+  getAllServices,
+  getServicesByCategory,
+  searchServices,
+  getServiceById,
+  getTopProviders,
 };

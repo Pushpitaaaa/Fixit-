@@ -9,6 +9,11 @@ const {
   respondToBooking,
   getEarnings,
   uploadPortfolioPhoto,
+  getAllServices,
+  getServicesByCategory,
+  searchServices,
+  getServiceById,
+  getTopProviders,
 } = require('../controllers/providerController');
 const { protect, providerOnly } = require('../middleware/authMiddleware');
 const upload = require('../middleware/upload');
@@ -24,5 +29,12 @@ router.get('/pending', protect, providerOnly, getPendingRequests);
 router.put('/bookings/:bookingId/respond', protect, providerOnly, respondToBooking);
 router.get('/earnings', protect, providerOnly, getEarnings);
 router.post('/portfolio', protect, providerOnly, upload.single('photo'), uploadPortfolioPhoto);
+
+// public customer routes
+router.get('/public/services', getAllServices);
+router.get('/public/services/category/:category', getServicesByCategory);
+router.get('/public/services/search/:keyword', searchServices);
+router.get('/public/services/:id', getServiceById);
+router.get('/public/top-providers', getTopProviders);
 
 module.exports = router;

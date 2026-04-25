@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Bar,
   BarChart,
@@ -108,6 +109,13 @@ export default function ProviderDashboard() {
   const [editingId, setEditingId] = useState(null);
   const [addingNew, setAddingNew] = useState(false);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login', { replace: true });
+  };
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -220,21 +228,31 @@ export default function ProviderDashboard() {
           </div>
         </div>
 
-        <div>
-          <div className={styles.toggleWrap}>
-            <span className={styles.toggleLabel}>{provider.isOpen ? '🟢 Open' : '🔴 Closed'}</span>
-            <button
-              type="button"
-              className={`${styles.toggleBtn} ${provider.isOpen ? styles.open : styles.closed}`}
-              onClick={handleToggleOpen}
-              aria-label="Toggle open status"
-            >
-              <span className={styles.toggleThumb} />
-            </button>
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <div>
+            <div className={styles.toggleWrap}>
+              <span className={styles.toggleLabel}>{provider.isOpen ? '🟢 Open' : '🔴 Closed'}</span>
+              <button
+                type="button"
+                className={`${styles.toggleBtn} ${provider.isOpen ? styles.open : styles.closed}`}
+                onClick={handleToggleOpen}
+                aria-label="Toggle open status"
+              >
+                <span className={styles.toggleThumb} />
+              </button>
+            </div>
+            <p className={styles.toggleHint}>
+              {provider.isOpen ? 'Visible in search' : 'Hidden from search'}
+            </p>
           </div>
-          <p className={styles.toggleHint}>
-            {provider.isOpen ? 'Visible in search' : 'Hidden from search'}
-          </p>
+
+          <button 
+            onClick={handleLogout} 
+            className={styles.btnGhost} 
+            style={{ color: '#dc2626', border: '1px solid #fca5a5', padding: '8px 16px' }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
