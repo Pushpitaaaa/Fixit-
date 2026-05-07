@@ -326,3 +326,267 @@ a {
   color: var(--text-light);
   font-size: 1.1rem;
 }
+
+/* ═══════════════════════════════════════════════
+   PROGRESS BAR — Uber-style order tracking
+═══════════════════════════════════════════════ */
+
+/* The outer container that holds all step circles + connectors in one row */
+.progress-track-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0 8px;
+  position: relative;
+}
+
+.progress-track-wrap.mini {
+  padding: 16px 0 4px;
+}
+
+/* Each "step" = circle + label stacked vertically */
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* The circle icon for each stage */
+.progress-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  position: relative;
+  transition: all 0.4s ease;
+  z-index: 1;
+}
+
+/* DONE: filled blue circle with white checkmark */
+.progress-circle.done {
+  background: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 86, 179, 0.35);
+}
+
+/* ACTIVE: vibrant blue, glowing ring */
+.progress-circle.active {
+  background: var(--secondary-color);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2), 0 4px 16px rgba(0, 123, 255, 0.4);
+  animation: activePop 0.5s ease;
+}
+
+/* FUTURE: pale grey, not yet reached */
+.progress-circle.future {
+  background: #f0f0f0;
+  color: #bbb;
+  border: 2px solid #e0e0e0;
+}
+
+/* The pulsing ring that appears on the active step — like Uber's moving dot */
+.progress-pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 3px solid var(--secondary-color);
+  opacity: 0;
+  animation: pulseRing 1.6s ease-out infinite;
+}
+
+@keyframes pulseRing {
+  0%   { transform: scale(0.85); opacity: 0.7; }
+  70%  { transform: scale(1.4);  opacity: 0;   }
+  100% { transform: scale(1.4);  opacity: 0;   }
+}
+
+@keyframes activePop {
+  0%   { transform: scale(0.8); }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* The horizontal line connecting two step circles */
+.progress-connector {
+  flex: 1;
+  height: 4px;
+  background: #e8e8e8;
+  border-radius: 2px;
+  margin: 0 4px;
+  margin-bottom: 26px; /* visually align with circle centers */
+  transition: background 0.4s ease;
+}
+
+/* Blue connector for completed segments */
+.progress-connector.connector-done {
+  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  box-shadow: 0 1px 4px rgba(0, 123, 255, 0.3);
+}
+
+/* Labels beneath each step circle */
+.progress-label {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.progress-label.label-active {
+  color: var(--secondary-color);
+  font-weight: 700;
+}
+
+.progress-label.label-done {
+  color: var(--primary-color);
+}
+
+/* ═══════════════════════════════════════════════
+   MY BOOKINGS PAGE — Customer tracking cards
+═══════════════════════════════════════════════ */
+
+.bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.booking-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 28px 32px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  animation: fadeIn 0.4s ease;
+}
+
+.booking-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.booking-service-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 6px;
+}
+
+.booking-meta {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.booking-amount {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 6px;
+}
+
+/* ═══════════════════════════════════════════════
+   PROVIDER DASHBOARD — Active Orders cards
+═══════════════════════════════════════════════ */
+
+.order-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.3s ease;
+}
+
+.order-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.order-customer-name {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 4px;
+}
+
+.order-service-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 4px;
+}
+
+.order-meta {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.order-amount {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 6px;
+}
+
+/* The "Advance to …" button */
+.btn-advance {
+  padding: 10px 22px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.btn-advance:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Green badge shown when a job is fully complete */
+.order-completed-badge {
+  display: inline-block;
+  background: #dcfce7;
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+}
+
+/* ═══════════════════════════════════════════════
+   STATUS BADGE — colour-coded pill
+═══════════════════════════════════════════════ */
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-pending     { background: #fef9c3; color: #a16207; }
+.status-accepted    { background: #dbeafe; color: #1d4ed8; }
+.status-on_the_way  { background: #ede9fe; color: #6d28d9; }
+.status-in_progress { background: #ffedd5; color: #c2410c; }
+.status-completed   { background: #dcfce7; color: #16a34a; }

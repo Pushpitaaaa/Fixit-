@@ -80,6 +80,52 @@ let pendingBookings = [
   },
 ];
 
+// All bookings (including active ones with progress statuses)
+let activeBookings = [
+  {
+    _id: 'abk-1',
+    provider: 'provider-1',
+    service: { title: 'AC Repair', _id: 'svc-1' },
+    date: '2026-05-08',
+    timeSlot: '10:00',
+    totalAmount: 1380,
+    status: 'pending',
+    customer: {
+      name: 'Rahim Uddin',
+      email: 'rahim@test.com',
+      profilePic: '',
+    },
+  },
+  {
+    _id: 'abk-2',
+    provider: 'provider-1',
+    service: { title: 'Deep Cleaning', _id: 'svc-2' },
+    date: '2026-05-09',
+    timeSlot: '14:00',
+    totalAmount: 920,
+    status: 'accepted',
+    customer: {
+      name: 'Karim Hossain',
+      email: 'karim@test.com',
+      profilePic: '',
+    },
+  },
+  {
+    _id: 'abk-3',
+    provider: 'provider-1',
+    service: { title: 'Electrical Wiring', _id: 'svc-3' },
+    date: '2026-05-10',
+    timeSlot: '09:00',
+    totalAmount: 1092,
+    status: 'on_the_way',
+    customer: {
+      name: 'Nasrin Akter',
+      email: 'nasrin@test.com',
+      profilePic: '',
+    },
+  },
+];
+
 const monthlyEarnings = [
   { label: '2026-01', amount: 2000 },
   { label: '2026-02', amount: 1400 },
@@ -175,6 +221,38 @@ const respondToBooking = async (req, res) => {
     booking.status = req.body.action === 'accept' ? 'accepted' : 'declined';
     pendingBookings = pendingBookings.filter((item) => item._id !== booking._id);
     return res.json(booking);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// Status pipeline — the 5 stages in order
+const STATUS_PIPELINE = ['pending', 'accepted', 'on_the_way', 'in_progress', 'completed'];
+
+const updateBookingStatus = async (req, res) => {
+  try {
+    const booking = activeBookings.find((item) => item._id === req.params.bookingId);
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    const currentIndex = STATUS_PIPELINE.indexOf(booking.status);
+
+    if (currentIndex === -1 || currentIndex === STATUS_PIPELINE.length - 1) {
+      return res.status(400).json({ message: 'Booking is already completed or has an invalid status.' });
+    }
+
+    booking.status = STATUS_PIPELINE[currentIndex + 1];
+    return res.json(booking);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const getActiveBookings = async (req, res) => {
+  try {
+    return res.json(activeBookings);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -282,4 +360,6 @@ module.exports = {
   searchServices,
   getServiceById,
   getTopProviders,
+  updateBookingStatus,
+  getActiveBookings,
 };

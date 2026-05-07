@@ -84,4 +84,16 @@ export const getTopProviders = async () => {
   const { data } = await api.get('/provider/public/top-providers');
   return data;
 };
+
+// 📦 ORDER TRACKING
+export const getCustomerBookings = async () => {
+  const { data } = await api.get('/provider/public/bookings');
+  return data;
+};
+
+export const updateBookingStatus = async (bookingId) => {
+  const { data } = await api.put(`/provider/bookings/${bookingId}/status`);
+  return data;
+};
+
 export default api;

@@ -19,6 +19,8 @@ import {
   respondToBooking,
   toggleOpen,
   uploadPortfolioPhoto,
+  getCustomerBookings,
+  updateBookingStatus,
 } from '../../services/api';
 import styles from './ProviderDashboard.module.css';
 
@@ -100,16 +102,112 @@ function ServiceForm({ initial, onSave, onCancel }) {
   );
 }
 
+// ─── Shared stage definitions ───────────────────────────────────────────────
+const STAGES = [
+  { key: 'pending',     label: 'Pending',     icon: '🕐' },
+  { key: 'accepted',    label: 'Accepted',    icon: '✅' },
+  { key: 'on_the_way',  label: 'On The Way',  icon: '🚗' },
+  { key: 'in_progress', label: 'In Progress', icon: '🔧' },
+  { key: 'completed',   label: 'Completed',   icon: '🎉' },
+];
+
+// Compact progress bar used inside the provider dashboard order cards
+function MiniProgressBar({ status }) {
+  const activeIndex = STAGES.findIndex((s) => s.key === status);
+  return (
+    <div className="progress-track-wrap mini">
+      {STAGES.map((stage, idx) => {
+        const isDone   = idx < activeIndex;
+        const isActive = idx === activeIndex;
+        return (
+          <div key={stage.key} style={{ display: 'flex', alignItems: 'center' }}>
+            <div className={`progress-circle ${isDone ? 'done' : ''} ${isActive ? 'active' : ''} ${!isDone && !isActive ? 'future' : ''}`}
+              style={{ width: 32, height: 32, fontSize: '0.8rem' }}>
+              {isDone ? '✓' : stage.icon}
+              {isActive && <span className="progress-pulse" />}
+            </div>
+            {idx < STAGES.length - 1 && (
+              <div className={`progress-connector ${idx < activeIndex ? 'connector-done' : ''}`} style={{ flex: 1 }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// The full Active Orders panel shown in the provider dashboard
+function ActiveOrdersPanel({ orders, onAdvance }) {
+  if (orders.length === 0) {
+    return (
+      <div>
+        <h3 style={{ marginBottom: 16, fontWeight: 600 }}>Active Orders</h3>
+        <p style={{ color: '#888', padding: '20px 0' }}>No active orders right now.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h3 style={{ marginBottom: 20, fontWeight: 600 }}>📦 Active Orders</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {orders.map((order) => {
+          const stageIndex = STAGES.findIndex((s) => s.key === order.status);
+          const isCompleted = order.status === 'completed';
+          const nextStage   = !isCompleted ? STAGES[stageIndex + 1] : null;
+
+          return (
+            <div key={order._id} className="order-card">
+              {/* Order info row */}
+              <div className="order-card-header">
+                <div>
+                  <p className="order-customer-name">👤 {order.customer?.name}</p>
+                  <h4 className="order-service-title">{order.service?.title}</h4>
+                  <p className="order-meta">📅 {order.date} &nbsp; ⏰ {order.timeSlot}</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p className="order-amount">৳{order.totalAmount?.toFixed(2)}</p>
+                  <span className={`status-badge status-${order.status}`}>
+                    {STAGES[stageIndex]?.icon} {STAGES[stageIndex]?.label}
+                  </span>
+                </div>
+              </div>
+
+              {/* Mini progress bar */}
+              <MiniProgressBar status={order.status} />
+
+              {/* Advance button */}
+              <div style={{ marginTop: 16 }}>
+                {isCompleted ? (
+                  <span className="order-completed-badge">✔ Job Complete</span>
+                ) : (
+                  <button
+                    className="btn-advance"
+                    onClick={() => onAdvance(order._id)}
+                  >
+                    Advance to "{nextStage?.label}" {nextStage?.icon} →
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function ProviderDashboard() {
-  const [provider, setProvider] = useState(null);
-  const [pending, setPending] = useState([]);
-  const [earnings, setEarnings] = useState([]);
-  const [period, setPeriod] = useState('monthly');
-  const [tab, setTab] = useState('services');
-  const [editingId, setEditingId] = useState(null);
-  const [addingNew, setAddingNew] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [provider, setProvider]         = useState(null);
+  const [pending, setPending]           = useState([]);
+  const [activeOrders, setActiveOrders] = useState([]);
+  const [earnings, setEarnings]         = useState([]);
+  const [period, setPeriod]             = useState('monthly');
+  const [tab, setTab]                   = useState('services');
+  const [editingId, setEditingId]       = useState(null);
+  const [addingNew, setAddingNew]       = useState(false);
+  const [loading, setLoading]           = useState(true);
+  const navigate                        = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -120,15 +218,17 @@ export default function ProviderDashboard() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [providerData, pendingData, earningsData] = await Promise.all([
+        const [providerData, pendingData, earningsData, ordersData] = await Promise.all([
           getDashboard(),
           getPendingRequests(),
           getEarnings('monthly'),
+          getCustomerBookings(),
         ]);
 
         setProvider(providerData);
         setPending(pendingData);
         setEarnings(earningsData);
+        setActiveOrders(ordersData);
       } catch (error) {
         console.error('Failed to load provider dashboard', error);
       } finally {
@@ -207,10 +307,11 @@ export default function ProviderDashboard() {
   }
 
   const tabs = [
-    { id: 'services', label: '🛠 Services' },
-    { id: 'pending', label: `📋 Pending (${pending.length})` },
-    { id: 'earnings', label: '💰 Earnings' },
-    { id: 'portfolio', label: '🖼 Portfolio' },
+    { id: 'services',      label: '🛠 Services' },
+    { id: 'pending',       label: `📋 Pending (${pending.length})` },
+    { id: 'active-orders', label: `📦 Active Orders (${activeOrders.length})` },
+    { id: 'earnings',      label: '💰 Earnings' },
+    { id: 'portfolio',     label: '🖼 Portfolio' },
   ];
 
   return (
@@ -384,6 +485,22 @@ export default function ProviderDashboard() {
               </div>
             )}
           </div>
+        )}
+
+        {tab === 'active-orders' && (
+          <ActiveOrdersPanel
+            orders={activeOrders}
+            onAdvance={async (bookingId) => {
+              try {
+                const updated = await updateBookingStatus(bookingId);
+                setActiveOrders((prev) =>
+                  prev.map((o) => (o._id === updated._id ? updated : o))
+                );
+              } catch (err) {
+                alert(err?.response?.data?.message || 'Could not advance status.');
+              }
+            }}
+          />
         )}
 
         {tab === 'earnings' && (
