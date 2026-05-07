@@ -16,6 +16,12 @@ const {
   getTopProviders,
   updateBookingStatus,
   getActiveBookings,
+  createBooking,
+  cancelBooking,
+  getServiceReviews,
+  addReview,
+  getProviderReviews,
+  replyToReview,
 } = require('../controllers/providerController');
 const { protect, providerOnly } = require('../middleware/authMiddleware');
 const upload = require('../middleware/upload');
@@ -33,6 +39,9 @@ router.get('/earnings', protect, providerOnly, getEarnings);
 router.post('/portfolio', protect, providerOnly, upload.single('photo'), uploadPortfolioPhoto);
 // Provider: advance a booking's status to the next stage
 router.put('/bookings/:bookingId/status', protect, providerOnly, updateBookingStatus);
+// Provider: get all reviews and reply to them
+router.get('/reviews', protect, providerOnly, getProviderReviews);
+router.post('/reviews/:reviewId/reply', protect, providerOnly, replyToReview);
 
 // public customer routes
 router.get('/public/services', getAllServices);
@@ -42,5 +51,12 @@ router.get('/public/services/:id', getServiceById);
 router.get('/public/top-providers', getTopProviders);
 // Customer: read all bookings (for the tracking page)
 router.get('/public/bookings', getActiveBookings);
+// Customer: create a new booking
+router.post('/public/bookings', createBooking);
+// Customer: cancel a booking (2-hour rule enforced server-side)
+router.delete('/public/bookings/:bookingId', cancelBooking);
+// Customer: view and add reviews for a service
+router.get('/public/services/:id/reviews', getServiceReviews);
+router.post('/public/services/:id/reviews', addReview);
 
 module.exports = router;

@@ -90,7 +90,7 @@ export default function LoginPage() {
       if (data.user.role === 'provider') {
         navigate('/provider/dashboard', { replace: true });
       } else {
-        navigate('/', { replace: true });
+        navigate('/home', { replace: true });
       }
     } catch (err) {
       setError(err?.response?.data?.message || 'Login failed');

@@ -21,6 +21,8 @@ import {
   uploadPortfolioPhoto,
   getCustomerBookings,
   updateBookingStatus,
+  getProviderReviews,
+  replyToReview,
 } from '../../services/api';
 import styles from './ProviderDashboard.module.css';
 
@@ -202,6 +204,8 @@ export default function ProviderDashboard() {
   const [pending, setPending]           = useState([]);
   const [activeOrders, setActiveOrders] = useState([]);
   const [earnings, setEarnings]         = useState([]);
+  const [reviews, setReviews]           = useState([]);
+  const [replyText, setReplyText]       = useState({});
   const [period, setPeriod]             = useState('monthly');
   const [tab, setTab]                   = useState('services');
   const [editingId, setEditingId]       = useState(null);
@@ -218,17 +222,19 @@ export default function ProviderDashboard() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [providerData, pendingData, earningsData, ordersData] = await Promise.all([
+        const [providerData, pendingData, earningsData, ordersData, reviewsData] = await Promise.all([
           getDashboard(),
           getPendingRequests(),
           getEarnings('monthly'),
           getCustomerBookings(),
+          getProviderReviews(),
         ]);
 
         setProvider(providerData);
         setPending(pendingData);
         setEarnings(earningsData);
         setActiveOrders(ordersData);
+        setReviews(reviewsData);
       } catch (error) {
         console.error('Failed to load provider dashboard', error);
       } finally {
@@ -312,6 +318,7 @@ export default function ProviderDashboard() {
     { id: 'active-orders', label: `📦 Active Orders (${activeOrders.length})` },
     { id: 'earnings',      label: '💰 Earnings' },
     { id: 'portfolio',     label: '🖼 Portfolio' },
+    { id: 'reviews',       label: '⭐ Reviews' },
   ];
 
   return (
@@ -581,6 +588,71 @@ export default function ProviderDashboard() {
               <div className={styles.photoGrid}>
                 {provider.portfolio.map((url, idx) => (
                   <img key={`${url}-${idx}`} className={styles.photo} src={url} alt={`Portfolio ${idx + 1}`} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'reviews' && (
+          <div>
+            <div className={styles.sectionHeader}>
+              <h3 className={styles.sectionTitle}>Customer Reviews</h3>
+            </div>
+            
+            {reviews.length === 0 ? (
+              <p className={styles.empty}>No reviews yet.</p>
+            ) : (
+              <div className="provider-reviews-list">
+                {reviews.map((review) => (
+                  <div key={review._id} className="provider-review-card">
+                    <div className="review-header">
+                      <div>
+                        <strong>{review.customerName}</strong>
+                        <div className="review-meta">
+                          Service: {review.serviceTitle} | {review.date}
+                        </div>
+                      </div>
+                      <div className="review-rating">
+                        {'⭐'.repeat(review.rating)}
+                      </div>
+                    </div>
+                    <p className="review-comment">{review.comment}</p>
+                    
+                    {review.reply ? (
+                      <div className="provider-reply-box">
+                        <span className="reply-label">Your Reply:</span>
+                        <p>{review.reply}</p>
+                      </div>
+                    ) : (
+                      <div className="reply-form">
+                        <textarea
+                          placeholder="Write a public reply to this review..."
+                          value={replyText[review._id] || ''}
+                          onChange={(e) => setReplyText({...replyText, [review._id]: e.target.value})}
+                          className="reply-input"
+                          rows="3"
+                        />
+                        <button
+                          className="btn-primary btn-reply"
+                          onClick={async () => {
+                            const text = replyText[review._id];
+                            if (!text || !text.trim()) return;
+                            try {
+                              const updatedReview = await replyToReview(review._id, { reply: text });
+                              setReviews(prev => prev.map(r => r._id === updatedReview._id ? updatedReview : r));
+                              setReplyText({...replyText, [review._id]: ''});
+                              alert('Reply posted successfully!');
+                            } catch (err) {
+                              alert('Failed to post reply.');
+                            }
+                          }}
+                        >
+                          Post Reply
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

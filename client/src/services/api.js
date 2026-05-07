@@ -96,4 +96,35 @@ export const updateBookingStatus = async (bookingId) => {
   return data;
 };
 
+export const createBooking = async (bookingData) => {
+  const { data } = await api.post('/provider/public/bookings', bookingData);
+  return data;
+};
+
+export const cancelBooking = async (bookingId) => {
+  const { data } = await api.delete(`/provider/public/bookings/${bookingId}`);
+  return data;
+};
+
+// ⭐ REVIEWS & RATINGS
+export const getServiceReviews = async (serviceId) => {
+  const { data } = await api.get(`/provider/public/services/${serviceId}/reviews`);
+  return data;
+};
+
+export const addServiceReview = async (serviceId, reviewData) => {
+  const { data } = await api.post(`/provider/public/services/${serviceId}/reviews`, reviewData);
+  return data;
+};
+
+export const getProviderReviews = async () => {
+  const { data } = await api.get('/provider/reviews');
+  return data;
+};
+
+export const replyToReview = async (reviewId, replyData) => {
+  const { data } = await api.post(`/provider/reviews/${reviewId}/reply`, replyData);
+  return data;
+};
+
 export default api;

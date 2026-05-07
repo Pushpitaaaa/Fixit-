@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCustomerBookings } from '../services/api';
+import { getCustomerBookings, cancelBooking } from '../services/api';
 
 // The 5 stages, in order — same as STATUS_PIPELINE on the server
 const STAGES = [
@@ -56,6 +56,7 @@ function ProgressBar({ status }) {
 export default function MyBookingsPage() {
   const [bookings, setBookings]   = useState([]);
   const [loading, setLoading]     = useState(true);
+  const [cancelStatus, setCancelStatus] = useState({ id: null, status: 'idle', msg: '' });
   const navigate                  = useNavigate();
 
   useEffect(() => {
@@ -71,6 +72,26 @@ export default function MyBookingsPage() {
     };
     load();
   }, []);
+
+  const handleCancel = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    
+    setCancelStatus({ id: bookingId, status: 'loading', msg: '' });
+    
+    try {
+      await cancelBooking(bookingId);
+      // Remove the cancelled booking from the list
+      setBookings(prev => prev.filter(b => b._id !== bookingId));
+      setCancelStatus({ id: null, status: 'idle', msg: '' });
+      alert('Booking cancelled successfully.');
+    } catch (err) {
+      setCancelStatus({ 
+        id: bookingId, 
+        status: 'error', 
+        msg: err.response?.data?.message || 'Failed to cancel booking.' 
+      });
+    }
+  };
 
   if (loading) return <div className="page-container loading-text">Loading your bookings...</div>;
 
@@ -92,6 +113,17 @@ export default function MyBookingsPage() {
           {bookings.map((booking) => {
             const stageIndex = getStageIndex(booking.status);
             const stageInfo  = STAGES[stageIndex];
+            
+            // Calculate if cancel is allowed (must be > 2 hours away, and not completed)
+            const isCompleted = booking.status === 'completed';
+            let isCancelable = false;
+            
+            if (!isCompleted && booking.date && booking.timeSlot) {
+              const appointmentTime = new Date(`${booking.date}T${booking.timeSlot}:00`);
+              const now = new Date();
+              const diffHours = (appointmentTime - now) / (1000 * 60 * 60);
+              isCancelable = diffHours > 2;
+            }
 
             return (
               <div key={booking._id} className="booking-card">
@@ -113,6 +145,34 @@ export default function MyBookingsPage() {
 
                 {/* The Uber-style progress bar */}
                 <ProgressBar status={booking.status} />
+
+                {/* Cancel Section */}
+                <div className="booking-card-footer">
+                  {cancelStatus.id === booking._id && cancelStatus.status === 'error' && (
+                    <div className="cancel-error-msg">{cancelStatus.msg}</div>
+                  )}
+                  
+                  {isCancelable ? (
+                    <button 
+                      className="btn-cancel" 
+                      onClick={() => handleCancel(booking._id)}
+                      disabled={cancelStatus.id === booking._id && cancelStatus.status === 'loading'}
+                    >
+                      {cancelStatus.id === booking._id && cancelStatus.status === 'loading' 
+                        ? 'Cancelling...' 
+                        : 'Cancel Booking'}
+                    </button>
+                  ) : (
+                    <div className="cancel-disabled-info">
+                      <button className="btn-cancel disabled" disabled>
+                        Cancel Booking
+                      </button>
+                      <span className="cancel-warning-text">
+                        ⚠️ Cannot cancel — appointment is within 2 hours or already completed.
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}

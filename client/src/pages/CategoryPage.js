@@ -24,7 +24,7 @@ export default function CategoryPage() {
 
   return (
     <div className="page-container">
-      <button onClick={() => navigate('/')} className="btn-secondary" style={{ marginBottom: '30px' }}>
+      <button onClick={() => navigate('/home')} className="btn-secondary" style={{ marginBottom: '30px' }}>
         &larr; Back Home
       </button>
       <h2 className="section-title">Category: {category}</h2>

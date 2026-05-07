@@ -18,7 +18,8 @@ function RequireAuth({ children }) {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/home" element={<HomePage />} />
       <Route path="/category/:category" element={<CategoryPage />} />
       <Route path="/search/:keyword" element={<SearchPage />} />
       <Route path="/service/:id" element={<ServiceDetailsPage />} />
@@ -32,7 +33,7 @@ export default function App() {
           </RequireAuth>
         }
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
