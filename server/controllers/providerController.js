@@ -1,168 +1,85 @@
-const providerData = {
-  _id: 'provider-1',
-  user: {
-    id: 'provider-user-1',
-    name: 'Mahadi Provider',
-    email: 'mahadi@test.com',
+const db = require('../db');
+
+const PROVIDER_ID = 'provider-1';
+
+const mapServiceRow = (service) => ({
+  _id: service.id,
+  title: service.title,
+  description: service.description,
+  price: Number(service.price),
+  category: service.category,
+});
+
+const mapReviewRow = (review) => ({
+  _id: review.id,
+  serviceId: review.serviceId,
+  customerName: review.customerName,
+  rating: Number(review.rating),
+  comment: review.comment,
+  reply: review.reply || '',
+  date: review.date,
+  ...(review.serviceTitle ? { serviceTitle: review.serviceTitle } : {}),
+});
+
+const mapBookingRow = (booking) => ({
+  _id: booking.id,
+  provider: booking.providerId,
+  service: {
+    _id: booking.serviceId,
+    title: booking.serviceTitle || 'Service booking',
+  },
+  date: booking.date,
+  timeSlot: booking.timeSlot,
+  totalAmount: Number(booking.totalAmount),
+  status: booking.status,
+  customer: {
+    name: booking.customerName || 'Customer',
+    email: booking.customerEmail || 'customer@fixit.com',
     profilePic: '',
   },
-  services: [
-    {
-      _id: 'svc-1',
-      title: 'AC Repair',
-      description: 'AC installation and repair service',
-      price: 1200,
-      category: 'Appliance',
-    },
-    {
-      _id: 'svc-2',
-      title: 'Deep Cleaning',
-      description: 'Home deep cleaning with professional tools',
-      price: 800,
-      category: 'Cleaning',
-    },
-    {
-      _id: 'svc-3',
-      title: 'Electrical Wiring',
-      description: 'Safe electrical wiring and socket setup',
-      price: 950,
-      category: 'Electrical',
-    },
-  ],
-  isOpen: true,
-  portfolio: [],
-  averageRating: 4.5,
-  totalJobs: 23,
-};
+});
 
-let pendingBookings = [
-  {
-    _id: 'bk-1',
-    provider: 'provider-1',
-    service: { title: 'AC Repair' },
-    date: '2026-04-15',
-    timeSlot: '10:00',
-    totalAmount: 920,
-    status: 'pending',
-    customer: {
-      name: 'Test Customer',
-      email: 'customer@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'bk-2',
-    provider: 'provider-1',
-    service: { title: 'Deep Cleaning' },
-    date: '2026-04-16',
-    timeSlot: '14:00',
-    totalAmount: 1100,
-    status: 'pending',
-    customer: {
-      name: 'Test Customer 2',
-      email: 'customer2@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'bk-3',
-    provider: 'provider-1',
-    service: { title: 'Electrical Wiring' },
-    date: '2026-04-17',
-    timeSlot: '17:00',
-    totalAmount: 1300,
-    status: 'pending',
-    customer: {
-      name: 'Test Customer 3',
-      email: 'customer3@test.com',
-      profilePic: '',
-    },
-  },
-];
+const getBookingById = (bookingId) =>
+  db
+    .prepare(
+      `SELECT b.*, s.title as serviceTitle
+       FROM bookings b
+       LEFT JOIN services s ON s.id = b.serviceId
+       WHERE b.id = ?`
+    )
+    .get(bookingId);
 
-// All bookings (including active ones with progress statuses)
-let activeBookings = [
-  {
-    _id: 'abk-1',
-    provider: 'provider-1',
-    service: { title: 'AC Repair', _id: 'svc-1' },
-    date: '2026-05-08',
-    timeSlot: '10:00',
-    totalAmount: 1380,
-    status: 'pending',
-    customer: {
-      name: 'Rahim Uddin',
-      email: 'rahim@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'abk-2',
-    provider: 'provider-1',
-    service: { title: 'Deep Cleaning', _id: 'svc-2' },
-    date: '2026-05-09',
-    timeSlot: '14:00',
-    totalAmount: 920,
-    status: 'accepted',
-    customer: {
-      name: 'Karim Hossain',
-      email: 'karim@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'abk-3',
-    provider: 'provider-1',
-    service: { title: 'Electrical Wiring', _id: 'svc-3' },
-    date: '2026-05-10',
-    timeSlot: '09:00',
-    totalAmount: 1092,
-    status: 'on_the_way',
-    customer: {
-      name: 'Nasrin Akter',
-      email: 'nasrin@test.com',
-      profilePic: '',
-    },
-  },
-];
-
-// Reviews and Ratings
-let reviews = [
-  {
-    _id: 'rev-1',
-    serviceId: 'svc-1',
-    customerName: 'Alice Smith',
-    rating: 5,
-    comment: 'Excellent AC repair! The technician was very polite and fixed the issue quickly.',
-    reply: 'Thank you Alice! We are glad you liked our service.',
-    date: '2026-05-01',
-  },
-  {
-    _id: 'rev-2',
-    serviceId: 'svc-1',
-    customerName: 'Bob Johnson',
-    rating: 4,
-    comment: 'Good service, but arrived 10 minutes late.',
-    reply: '',
-    date: '2026-05-03',
-  }
-];
-
-const monthlyEarnings = [
-  { label: '2026-01', amount: 2000 },
-  { label: '2026-02', amount: 1400 },
-  { label: '2026-03', amount: 1500 },
-];
-
-const dailyEarnings = [
-  { label: '2026-03-01', amount: 500 },
-  { label: '2026-03-04', amount: 700 },
-  { label: '2026-03-12', amount: 300 },
-];
+const getBookings = (whereClause = '', params = []) =>
+  db
+    .prepare(
+      `SELECT b.*, s.title as serviceTitle
+       FROM bookings b
+       LEFT JOIN services s ON s.id = b.serviceId
+       ${whereClause}`
+    )
+    .all(...params);
 
 const getDashboard = async (req, res) => {
   try {
-    return res.json(providerData);
+    const provider = db.prepare('SELECT * FROM providers WHERE id = ?').get(PROVIDER_ID);
+    const services = db.prepare('SELECT * FROM services WHERE providerId = ?').all(PROVIDER_ID);
+    const uploads = db.prepare('SELECT url FROM uploads WHERE providerId = ?').all(PROVIDER_ID);
+
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider not found. Please seed the database.' });
+    }
+
+    const enriched = {
+      _id: provider.id,
+      user: { id: 'provider-user-1', name: provider.name, email: provider.email, profilePic: provider.profilePic },
+      services: services.map(mapServiceRow),
+      isOpen: Boolean(provider.isOpen),
+      portfolio: uploads.map(u => u.url),
+      averageRating: Number(provider.averageRating || 0),
+      totalJobs: Number(provider.totalJobs || 0),
+    };
+
+    return res.json(enriched);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -170,8 +87,10 @@ const getDashboard = async (req, res) => {
 
 const toggleOpen = async (req, res) => {
   try {
-    providerData.isOpen = !providerData.isOpen;
-    return res.json({ isOpen: providerData.isOpen });
+    const provider = db.prepare('SELECT isOpen FROM providers WHERE id = ?').get(PROVIDER_ID);
+    const next = provider ? (provider.isOpen ? 0 : 1) : 1;
+    db.prepare('UPDATE providers SET isOpen = ? WHERE id = ?').run(next, PROVIDER_ID);
+    return res.json({ isOpen: Boolean(next) });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -179,15 +98,11 @@ const toggleOpen = async (req, res) => {
 
 const addService = async (req, res) => {
   try {
-    const service = {
-      _id: `svc-${Date.now()}`,
-      title: req.body.title,
-      description: req.body.description,
-      price: Number(req.body.price),
-      category: req.body.category,
-    };
-    providerData.services.push(service);
-    return res.json(providerData.services);
+    const id = `svc-${Date.now()}`;
+    const stmt = db.prepare('INSERT INTO services (id, providerId, title, description, price, category) VALUES (?, ?, ?, ?, ?, ?)');
+    stmt.run(id, PROVIDER_ID, req.body.title, req.body.description, Number(req.body.price), req.body.category);
+    const services = db.prepare('SELECT * FROM services WHERE providerId = ?').all(PROVIDER_ID);
+    return res.json(services.map(mapServiceRow));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -195,18 +110,12 @@ const addService = async (req, res) => {
 
 const editService = async (req, res) => {
   try {
-    const service = providerData.services.find((item) => item._id === req.params.serviceId);
-
-    if (!service) {
-      return res.status(404).json({ message: 'Service not found' });
-    }
-
-    service.title = req.body.title;
-    service.description = req.body.description;
-    service.price = Number(req.body.price);
-    service.category = req.body.category;
-
-    return res.json(providerData.services);
+    const service = db.prepare('SELECT * FROM services WHERE id = ?').get(req.params.serviceId);
+    if (!service) return res.status(404).json({ message: 'Service not found' });
+    db.prepare('UPDATE services SET title = ?, description = ?, price = ?, category = ? WHERE id = ?')
+      .run(req.body.title, req.body.description, Number(req.body.price), req.body.category, req.params.serviceId);
+    const services = db.prepare('SELECT * FROM services WHERE providerId = ?').all(PROVIDER_ID);
+    return res.json(services.map(mapServiceRow));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -214,10 +123,7 @@ const editService = async (req, res) => {
 
 const deleteService = async (req, res) => {
   try {
-    providerData.services = providerData.services.filter(
-      (service) => service._id !== req.params.serviceId
-    );
-
+    db.prepare('DELETE FROM services WHERE id = ?').run(req.params.serviceId);
     return res.json({ message: 'Service deleted' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -226,7 +132,8 @@ const deleteService = async (req, res) => {
 
 const getPendingRequests = async (req, res) => {
   try {
-    return res.json(pendingBookings);
+    const pending = getBookings('WHERE b.status = ?', ['pending']);
+    return res.json(pending.map(mapBookingRow));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -234,15 +141,12 @@ const getPendingRequests = async (req, res) => {
 
 const respondToBooking = async (req, res) => {
   try {
-    const booking = pendingBookings.find((item) => item._id === req.params.bookingId);
-
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
-    }
-
-    booking.status = req.body.action === 'accept' ? 'accepted' : 'declined';
-    pendingBookings = pendingBookings.filter((item) => item._id !== booking._id);
-    return res.json(booking);
+    const booking = getBookingById(req.params.bookingId);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    const nextStatus = req.body.action === 'accept' ? 'accepted' : 'declined';
+    db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run(nextStatus, req.params.bookingId);
+    const updated = getBookingById(req.params.bookingId);
+    return res.json(mapBookingRow(updated));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -253,20 +157,16 @@ const STATUS_PIPELINE = ['pending', 'accepted', 'on_the_way', 'in_progress', 'co
 
 const updateBookingStatus = async (req, res) => {
   try {
-    const booking = activeBookings.find((item) => item._id === req.params.bookingId);
-
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
-    }
-
+    const booking = getBookingById(req.params.bookingId);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
     const currentIndex = STATUS_PIPELINE.indexOf(booking.status);
-
     if (currentIndex === -1 || currentIndex === STATUS_PIPELINE.length - 1) {
       return res.status(400).json({ message: 'Booking is already completed or has an invalid status.' });
     }
-
-    booking.status = STATUS_PIPELINE[currentIndex + 1];
-    return res.json(booking);
+    const next = STATUS_PIPELINE[currentIndex + 1];
+    db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run(next, req.params.bookingId);
+    const updated = getBookingById(req.params.bookingId);
+    return res.json(mapBookingRow(updated));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -274,7 +174,8 @@ const updateBookingStatus = async (req, res) => {
 
 const getActiveBookings = async (req, res) => {
   try {
-    return res.json(activeBookings);
+    const bookings = getBookings();
+    return res.json(bookings.map(mapBookingRow));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -283,7 +184,15 @@ const getActiveBookings = async (req, res) => {
 const getEarnings = async (req, res) => {
   try {
     const period = req.query.period === 'daily' ? 'daily' : 'monthly';
-    return res.json(period === 'daily' ? dailyEarnings : monthlyEarnings);
+    // Aggregate bookings by month or day
+    const rows = db.prepare('SELECT date, totalAmount FROM bookings WHERE status = ?').all('completed');
+    const map = {};
+    rows.forEach(r => {
+      const key = period === 'daily' ? r.date : r.date.slice(0,7);
+      map[key] = (map[key] || 0) + r.totalAmount;
+    });
+    const result = Object.keys(map).sort().map(k => ({ label: k, amount: map[k] }));
+    return res.json(result);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -291,14 +200,12 @@ const getEarnings = async (req, res) => {
 
 const uploadPortfolioPhoto = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
     const url = `/uploads/${req.file.filename}`;
-    providerData.portfolio.push(url);
-
-    return res.json({ url, portfolio: providerData.portfolio });
+    const id = `up-${Date.now()}`;
+    db.prepare('INSERT INTO uploads (id, providerId, url) VALUES (?, ?, ?)').run(id, PROVIDER_ID, url);
+    const uploads = db.prepare('SELECT url FROM uploads WHERE providerId = ?').all(PROVIDER_ID);
+    return res.json({ url, portfolio: uploads.map(u => u.url) });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -308,7 +215,8 @@ const uploadPortfolioPhoto = async (req, res) => {
 
 const getAllServices = async (req, res) => {
   try {
-    return res.json(providerData.services);
+    const services = db.prepare('SELECT * FROM services').all();
+    return res.json(services.map(mapServiceRow));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -316,13 +224,9 @@ const getAllServices = async (req, res) => {
 
 const getServicesByCategory = async (req, res) => {
   try {
-    const category = req.params.category.toLowerCase();
-
-    const filtered = providerData.services.filter(
-      (s) => s.category.toLowerCase() === category
-    );
-
-    return res.json(filtered);
+    const category = req.params.category;
+    const filtered = db.prepare('SELECT * FROM services WHERE LOWER(category) = LOWER(?)').all(category);
+    return res.json(filtered.map(mapServiceRow));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -330,16 +234,9 @@ const getServicesByCategory = async (req, res) => {
 
 const searchServices = async (req, res) => {
   try {
-    const keyword = req.params.keyword.toLowerCase();
-
-    const results = providerData.services.filter(
-      (s) =>
-        s.title.toLowerCase().includes(keyword) ||
-        s.category.toLowerCase().includes(keyword) ||
-        s.description.toLowerCase().includes(keyword)
-    );
-
-    return res.json(results);
+    const keyword = `%${req.params.keyword}%`;
+    const results = db.prepare('SELECT * FROM services WHERE LOWER(title) LIKE LOWER(?) OR LOWER(category) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)').all(keyword, keyword, keyword);
+    return res.json(results.map(mapServiceRow));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -347,13 +244,9 @@ const searchServices = async (req, res) => {
 
 const getServiceById = async (req, res) => {
   try {
-    const service = providerData.services.find((s) => s._id === req.params.id);
-
-    if (!service) {
-      return res.status(404).json({ message: 'Service not found' });
-    }
-
-    return res.json(service);
+    const service = db.prepare('SELECT * FROM services WHERE id = ?').get(req.params.id);
+    if (!service) return res.status(404).json({ message: 'Service not found' });
+    return res.json(mapServiceRow(service));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -361,7 +254,20 @@ const getServiceById = async (req, res) => {
 
 const getTopProviders = async (req, res) => {
   try {
-    return res.json([providerData]);
+    const providers = db.prepare('SELECT * FROM providers ORDER BY averageRating DESC LIMIT 5').all();
+    const mapped = providers.map((provider) => ({
+      _id: provider.id,
+      user: {
+        id: 'provider-user-1',
+        name: provider.name,
+        email: provider.email,
+        profilePic: provider.profilePic,
+      },
+      averageRating: Number(provider.averageRating || 0),
+      totalJobs: Number(provider.totalJobs || 0),
+      isOpen: Boolean(provider.isOpen),
+    }));
+    return res.json(mapped);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -371,46 +277,19 @@ const getTopProviders = async (req, res) => {
 const createBooking = async (req, res) => {
   try {
     const { serviceId, date, timeSlot, customerName } = req.body;
-
-    // Validate required fields
-    if (!serviceId || !date || !timeSlot) {
-      return res.status(400).json({ message: 'serviceId, date, and timeSlot are required.' });
-    }
-
-    // Ensure date is not in the past
+    if (!serviceId || !date || !timeSlot) return res.status(400).json({ message: 'serviceId, date, and timeSlot are required.' });
     const chosenDate = new Date(`${date}T${timeSlot}:00`);
-    if (chosenDate <= new Date()) {
-      return res.status(400).json({ message: 'Cannot book a date/time in the past.' });
-    }
-
-    // Find the service
-    const service = providerData.services.find((s) => s._id === serviceId);
-    if (!service) {
-      return res.status(404).json({ message: 'Service not found.' });
-    }
-
-    // Calculate total (same formula as the frontend display)
+    if (chosenDate <= new Date()) return res.status(400).json({ message: 'Cannot book a date/time in the past.' });
+    const service = db.prepare('SELECT * FROM services WHERE id = ?').get(serviceId);
+    if (!service) return res.status(404).json({ message: 'Service not found.' });
     const platformFee = service.price * 0.10;
-    const tax         = service.price * 0.05;
-    const totalAmount = service.price + platformFee + tax;
-
-    const newBooking = {
-      _id:         `bk-${Date.now()}`,
-      provider:    'provider-1',
-      service:     { title: service.title, _id: service._id },
-      date,
-      timeSlot,
-      totalAmount: parseFloat(totalAmount.toFixed(2)),
-      status:      'pending',
-      customer: {
-        name:       customerName || 'Customer',
-        email:      'customer@fixit.com',
-        profilePic: '',
-      },
-    };
-
-    activeBookings.push(newBooking);
-    return res.status(201).json(newBooking);
+    const tax = service.price * 0.05;
+    const totalAmount = parseFloat((service.price + platformFee + tax).toFixed(2));
+    const id = `bk-${Date.now()}`;
+    db.prepare('INSERT INTO bookings (id, providerId, serviceId, date, timeSlot, totalAmount, status, customerName, customerEmail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(id, PROVIDER_ID, service.id, date, timeSlot, totalAmount, 'pending', customerName || 'Customer', 'customer@fixit.com');
+    const newBooking = getBookingById(id);
+    return res.status(201).json(mapBookingRow(newBooking));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -419,27 +298,15 @@ const createBooking = async (req, res) => {
 // ── BOOKING: Cancel (blocked if ≤ 2 hours before appointment) ─────────────
 const cancelBooking = async (req, res) => {
   try {
-    const booking = activeBookings.find((b) => b._id === req.params.bookingId);
-
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found.' });
-    }
-
-    // Build the appointment DateTime from stored date + timeSlot strings
+    const booking = getBookingById(req.params.bookingId);
+    if (!booking) return res.status(404).json({ message: 'Booking not found.' });
     const appointmentTime = new Date(`${booking.date}T${booking.timeSlot}:00`);
-    const now             = new Date();
-    const diffMs          = appointmentTime - now;
-    const diffHours       = diffMs / (1000 * 60 * 60);
-
-    // BLOCK if within 2 hours
+    const now = new Date();
+    const diffHours = (appointmentTime - now) / (1000 * 60 * 60);
     if (diffHours <= 2) {
-      return res.status(403).json({
-        message: `Cannot cancel — your appointment is in ${diffHours <= 0 ? 'less than 0' : diffHours.toFixed(1)} hours. Cancellations must be made at least 2 hours before the appointment.`,
-      });
+      return res.status(403).json({ message: `Cannot cancel — your appointment is in ${diffHours <= 0 ? 'less than 0' : diffHours.toFixed(1)} hours. Cancellations must be made at least 2 hours before the appointment.` });
     }
-
-    // Remove the booking
-    activeBookings = activeBookings.filter((b) => b._id !== req.params.bookingId);
+    db.prepare('DELETE FROM bookings WHERE id = ?').run(req.params.bookingId);
     return res.json({ message: 'Booking cancelled successfully.' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -450,8 +317,8 @@ const cancelBooking = async (req, res) => {
 
 const getServiceReviews = async (req, res) => {
   try {
-    const serviceReviews = reviews.filter((r) => r.serviceId === req.params.id);
-    return res.json(serviceReviews);
+    const serviceReviews = db.prepare('SELECT * FROM reviews WHERE serviceId = ?').all(req.params.id);
+    return res.json(serviceReviews.map(mapReviewRow));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -461,31 +328,21 @@ const addReview = async (req, res) => {
   try {
     const { customerName, rating, comment } = req.body;
     const serviceId = req.params.id;
+    if (!rating || rating < 1 || rating > 5) return res.status(400).json({ message: 'Valid rating between 1 and 5 is required.' });
+    if (!comment) return res.status(400).json({ message: 'Comment is required.' });
+    const id = `rev-${Date.now()}`;
+    const date = new Date().toISOString().split('T')[0];
+    db.prepare('INSERT INTO reviews (id, serviceId, customerName, rating, comment, reply, date) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(id, serviceId, customerName || 'Anonymous', Number(rating), comment, '', date);
 
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Valid rating between 1 and 5 is required.' });
-    }
-    if (!comment) {
-      return res.status(400).json({ message: 'Comment is required.' });
-    }
+    // update provider average
+    const all = db.prepare('SELECT rating FROM reviews').all();
+    const total = all.reduce((s, r) => s + r.rating, 0);
+    const avg = total / all.length;
+    db.prepare('UPDATE providers SET averageRating = ? WHERE id = ?').run(Number(avg.toFixed(1)), PROVIDER_ID);
 
-    const newReview = {
-      _id: `rev-${Date.now()}`,
-      serviceId,
-      customerName: customerName || 'Anonymous',
-      rating: Number(rating),
-      comment,
-      reply: '',
-      date: new Date().toISOString().split('T')[0],
-    };
-
-    reviews.push(newReview);
-
-    // Recalculate average rating for the provider
-    const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
-    providerData.averageRating = Number((totalRating / reviews.length).toFixed(1));
-
-    return res.status(201).json(newReview);
+    const newReview = db.prepare('SELECT * FROM reviews WHERE id = ?').get(id);
+    return res.status(201).json(mapReviewRow(newReview));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -493,14 +350,8 @@ const addReview = async (req, res) => {
 
 const getProviderReviews = async (req, res) => {
   try {
-    // In this mock, all reviews belong to this single provider's services
-    // To provide context in the dashboard, we'll attach the service title
-    const enrichedReviews = reviews.map(r => {
-      const service = providerData.services.find(s => s._id === r.serviceId);
-      return { ...r, serviceTitle: service ? service.title : 'Unknown Service' };
-    });
-    
-    return res.json(enrichedReviews);
+    const rows = db.prepare('SELECT r.*, s.title as serviceTitle FROM reviews r LEFT JOIN services s ON r.serviceId = s.id').all();
+    return res.json(rows.map(mapReviewRow));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -508,18 +359,12 @@ const getProviderReviews = async (req, res) => {
 
 const replyToReview = async (req, res) => {
   try {
-    const review = reviews.find((r) => r._id === req.params.reviewId);
-
-    if (!review) {
-      return res.status(404).json({ message: 'Review not found.' });
-    }
-
-    if (!req.body.reply) {
-      return res.status(400).json({ message: 'Reply text is required.' });
-    }
-
-    review.reply = req.body.reply;
-    return res.json(review);
+    const review = db.prepare('SELECT * FROM reviews WHERE id = ?').get(req.params.reviewId);
+    if (!review) return res.status(404).json({ message: 'Review not found.' });
+    if (!req.body.reply) return res.status(400).json({ message: 'Reply text is required.' });
+    db.prepare('UPDATE reviews SET reply = ? WHERE id = ?').run(req.body.reply, req.params.reviewId);
+    const updated = db.prepare('SELECT r.*, s.title as serviceTitle FROM reviews r LEFT JOIN services s ON r.serviceId = s.id WHERE r.id = ?').get(req.params.reviewId);
+    return res.json(mapReviewRow(updated));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -548,4 +393,4 @@ module.exports = {
   addReview,
   getProviderReviews,
   replyToReview,
-};
+};
