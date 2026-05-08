@@ -26,16 +26,34 @@ import {
 } from '../../services/api';
 import styles from './ProviderDashboard.module.css';
 
-const DEFAULT_AVATAR =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="%23e2e8f0"/><circle cx="40" cy="30" r="14" fill="%2394a3b8"/><path d="M16 68c3-12 13-20 24-20s21 8 24 20" fill="%2394a3b8"/></svg>';
+const blankServiceForm = {
+  title: '',
+  description: '',
+  price: '',
+  category: '',
+  includedItems: '',
+};
+
+const toIncludedItemsText = (items) => {
+  if (Array.isArray(items)) return items.join('\n');
+  return items || '';
+};
+
+const normalizeServiceForm = (form) => ({
+  ...form,
+  includedItems: toIncludedItemsText(form.includedItems)
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean),
+});
 
 function ServiceForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState(
-    initial || { title: '', description: '', price: '', category: '' }
+    initial ? { ...initial, includedItems: toIncludedItemsText(initial.includedItems) } : blankServiceForm
   );
 
   useEffect(() => {
-    setForm(initial || { title: '', description: '', price: '', category: '' });
+    setForm(initial ? { ...initial, includedItems: toIncludedItemsText(initial.includedItems) } : blankServiceForm);
   }, [initial]);
 
   const handleChange = (e) => {
@@ -95,8 +113,20 @@ function ServiceForm({ initial, onSave, onCancel }) {
         />
       </label>
 
+      <label className={styles.field}>
+        <span className={styles.fieldLabel}>What Is Included</span>
+        <textarea
+          className={styles.textarea}
+          name="includedItems"
+          rows={4}
+          placeholder={'Basic diagnosis\nFilter cleaning\nCooling check'}
+          value={form.includedItems}
+          onChange={handleChange}
+        />
+      </label>
+
       <div className={styles.formBtns}>
-        <button type="button" className={styles.btnPrimary} onClick={() => onSave(form)}>
+        <button type="button" className={styles.btnPrimary} onClick={() => onSave(normalizeServiceForm(form))}>
           Save
         </button>
         <button type="button" className={styles.btnGhost} onClick={onCancel}>
@@ -420,6 +450,13 @@ export default function ProviderDashboard() {
                         <p className={styles.serviceCategory}>{service.category}</p>
                         <h4 className={styles.serviceTitle}>{service.title}</h4>
                         <p className={styles.serviceDesc}>{service.description}</p>
+                        {(service.includedItems || []).length > 0 && (
+                          <ul className={styles.serviceIncludedList}>
+                            {service.includedItems.slice(0, 3).map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                        )}
                         <p className={styles.servicePrice}>৳ {service.price}</p>
                       </div>
                       <div className={styles.serviceActions}>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getServiceById, createBooking, getServiceReviews, addServiceReview } from '../services/api';
+import { getServiceById, createBooking, getServiceReviews } from '../services/api';
 
 export default function ServiceDetailsPage() {
   const { id } = useParams();
@@ -9,10 +9,6 @@ export default function ServiceDetailsPage() {
   
   // Reviews state
   const [reviews, setReviews] = useState([]);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState('');
-  const [reviewSubmitting, setReviewSubmitting] = useState(false);
-
   // Booking form state
   const [date, setDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
@@ -56,6 +52,7 @@ export default function ServiceDetailsPage() {
   const platformFee = (serviceFee * platformFeePercentage) / 100;
   const tax = (serviceFee * taxPercentage) / 100;
   const totalCost = serviceFee + platformFee + tax;
+  const includedItems = service.includedItems || [];
 
   const handleBook = async () => {
     if (!date || !timeSlot) {
@@ -80,28 +77,6 @@ export default function ServiceDetailsPage() {
     }
   };
 
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-    if (!reviewComment.trim()) return;
-    
-    setReviewSubmitting(true);
-    try {
-      const newReview = await addServiceReview(id, {
-        customerName: 'Demo Customer',
-        rating: reviewRating,
-        comment: reviewComment
-      });
-      setReviews([...reviews, newReview]);
-      setReviewComment('');
-      setReviewRating(5);
-      alert('Review submitted successfully!');
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to submit review.');
-    } finally {
-      setReviewSubmitting(false);
-    }
-  };
-
   // Get today's date in YYYY-MM-DD format for the min attribute of the date picker
   const today = new Date().toISOString().split('T')[0];
 
@@ -121,6 +96,17 @@ export default function ServiceDetailsPage() {
           <h3 className="section-title">Description</h3>
           <p>{service.description}</p>
         </div>
+
+        {includedItems.length > 0 && (
+          <div className="included-section">
+            <h3 className="section-title">What Is Included</h3>
+            <ul className="included-list">
+              {includedItems.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="summary-box">
           <h3>Booking Summary</h3>
@@ -223,45 +209,6 @@ export default function ServiceDetailsPage() {
           </div>
         )}
 
-        <div className="add-review-section">
-          <h4>Leave a Review</h4>
-          <form onSubmit={handleSubmitReview} className="add-review-form">
-            <div className="review-form-group">
-              <label>Rating</label>
-              <select 
-                value={reviewRating} 
-                onChange={(e) => setReviewRating(Number(e.target.value))}
-                className="review-input"
-              >
-                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
-                <option value="4">⭐⭐⭐⭐ (4/5)</option>
-                <option value="3">⭐⭐⭐ (3/5)</option>
-                <option value="2">⭐⭐ (2/5)</option>
-                <option value="1">⭐ (1/5)</option>
-              </select>
-            </div>
-            
-            <div className="review-form-group">
-              <label>Comment</label>
-              <textarea 
-                value={reviewComment}
-                onChange={(e) => setReviewComment(e.target.value)}
-                placeholder="Share your experience..."
-                required
-                className="review-textarea"
-                rows="4"
-              ></textarea>
-            </div>
-            
-            <button 
-              type="submit" 
-              className="btn-primary btn-submit-review"
-              disabled={reviewSubmitting || !reviewComment.trim()}
-            >
-              {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
-            </button>
-          </form>
-        </div>
       </div>
     </div>
   );

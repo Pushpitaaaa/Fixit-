@@ -7,7 +7,17 @@ export default function HomePage() {
   const [topProviders, setTopProviders] = useState([]);
   const navigate = useNavigate();
 
-  const categories = ['Appliance', 'Cleaning', 'Electrical'];
+  const categories = [
+    { name: 'Appliance', icon: '📺' },
+    { name: 'Cleaning', icon: '🧹' },
+    { name: 'Electrical', icon: '⚡' },
+    { name: 'Plumbing', icon: '🚰' },
+    { name: 'Home Maintenance', icon: '🛠️' },
+    { name: 'Tutoring', icon: '📚' },
+    { name: 'Tech Support', icon: '💻' },
+    { name: 'Pest Control', icon: '🐛' },
+    { name: 'Shifting', icon: '🚚' }
+  ];
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
@@ -43,6 +53,7 @@ export default function HomePage() {
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
               <span style={{ fontWeight: 600, color: 'var(--text-color)' }}>Hello, {user.name}</span>
+              <button onClick={() => navigate('/my-bookings')} className="btn-secondary">View Orders</button>
               <button onClick={handleLogout} className="btn-secondary">Logout</button>
             </div>
           ) : (
@@ -50,14 +61,14 @@ export default function HomePage() {
           )}
         </div>
       </div>
-      
+
       {/* Search Section */}
       <section className="search-container">
         <h2 className="section-title" style={{ alignSelf: 'flex-start' }}>Find a Professional</h2>
         <form onSubmit={handleSearch} className="search-form">
-          <input 
-            type="text" 
-            placeholder="Search by title, category, description..." 
+          <input
+            type="text"
+            placeholder="Search by title, category, description..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             className="search-input"
@@ -73,12 +84,13 @@ export default function HomePage() {
         <h2 className="section-title">Service Categories</h2>
         <div className="categories-grid">
           {categories.map((cat) => (
-            <div 
-              key={cat} 
-              onClick={() => navigate(`/category/${cat}`)}
+            <div
+              key={cat.name}
+              onClick={() => navigate(`/category/${cat.name}`)}
               className="category-card"
             >
-              <h3>{cat}</h3>
+              <div style={{ fontSize: '3rem', marginBottom: '10px' }}>{cat.icon}</div>
+              <h3>{cat.name}</h3>
             </div>
           ))}
         </div>
@@ -95,6 +107,11 @@ export default function HomePage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
                   <span style={{ color: '#FFD700', fontSize: '1.2rem' }}>⭐ {provider.averageRating.toFixed(1)}</span>
                   <span style={{ color: 'var(--text-light)' }}>({provider.totalJobs} jobs)</span>
+                  {provider.isVerified && provider.totalJobs >= 20 && (
+                    <span style={{ backgroundColor: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                      ✅ Verified
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
