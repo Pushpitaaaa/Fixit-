@@ -70,8 +70,9 @@ const linkContainerStyle = {
   color: '#475569',
 };
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [role, setRole] = useState('customer');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -81,6 +82,7 @@ export default function LoginPage() {
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     setError('');
+    setName('');
     setEmail('');
     setPassword('');
   };
@@ -91,7 +93,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { data } = await api.post('/auth/login', { email, password, role });
+      const endpoint = role === 'provider' ? '/auth/register/provider' : '/auth/register';
+      const { data } = await api.post(endpoint, { name, email, password });
+      
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
@@ -101,7 +105,7 @@ export default function LoginPage() {
         navigate('/home', { replace: true });
       }
     } catch (err) {
-      setError(err?.response?.data?.message || 'Login failed');
+      setError(err?.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -110,7 +114,7 @@ export default function LoginPage() {
   return (
     <div style={boxStyle}>
       <form style={cardStyle} onSubmit={onSubmit}>
-        <h2 style={{ marginTop: 0, marginBottom: 20, textAlign: 'center' }}>Welcome Back</h2>
+        <h2 style={{ marginTop: 0, marginBottom: 20, textAlign: 'center' }}>Create an Account</h2>
 
         <div style={roleToggleContainerStyle}>
           <button 
@@ -129,6 +133,15 @@ export default function LoginPage() {
           </button>
         </div>
 
+        <label htmlFor="name" style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>Full Name</label>
+        <input
+          id="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          style={inputStyle}
+          required
+        />
 
         <label htmlFor="email" style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>Email</label>
         <input
@@ -148,6 +161,7 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           style={inputStyle}
           required
+          minLength="6"
         />
 
         {error ? (
@@ -155,13 +169,13 @@ export default function LoginPage() {
         ) : null}
 
         <button type="submit" disabled={loading} style={buttonStyle}>
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Creating account...' : 'Sign Up'}
         </button>
 
         <div style={linkContainerStyle}>
-          Don't have an account?{' '}
-          <Link to="/signup" style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}>
-            Sign up here
+          Already have an account?{' '}
+          <Link to="/login" style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}>
+            Login here
           </Link>
         </div>
       </form>
