@@ -1,14 +1,15 @@
 services:
   server:
     build:
-      context: ./Fixit-/server
+      context: ./server
     ports:
       - '5000:5000'
     volumes:
-      - ./Fixit-/server/uploads:/usr/src/app/uploads
-      - ./Fixit-/server/data:/usr/src/app/data
+      - ./server/uploads:/usr/src/app/uploads
     environment:
       - NODE_ENV=development
+      - MONGO_URI=mongodb://mongo:27017/fixit
+      - JWT_SECRET=change_this_secret
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"]
       interval: 10s
@@ -17,7 +18,7 @@ services:
 
   client:
     build:
-      context: ./Fixit-/client
+      context: ./client
     ports:
       - '3000:3000'
     environment:
@@ -25,6 +26,15 @@ services:
       - HOST=0.0.0.0
     depends_on:
       - server
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - '27017:27017'
 
 volumes:
-  server_data:
+  mongo_data:

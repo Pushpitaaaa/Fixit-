@@ -1,307 +1,132 @@
-const providerData = {
-  _id: 'provider-1',
-  user: {
-    id: 'provider-user-1',
-    name: 'Mahadi Provider',
-    email: 'mahadi@test.com',
-    profilePic: '',
-  },
-  services: [
-    {
-      _id: 'svc-1',
-      title: 'AC Repair',
-      description: 'AC installation and repair service',
-      price: 1200,
-      category: 'Appliance',
-      icon: '📺',
-      includedItems: [
-        'Basic diagnosis',
-        'Filter cleaning',
-        'Cooling check',
-      ],
-    },
-    {
-      _id: 'svc-2',
-      title: 'Deep Cleaning',
-      description: 'Home deep cleaning with professional tools',
-      price: 800,
-      category: 'Cleaning',
-      icon: '🧹',
-      includedItems: [
-        'Floor and surface cleaning',
-        'Kitchen grease removal',
-        'Bathroom sanitization',
-      ],
-    },
-    {
-      _id: 'svc-3',
-      title: 'Electrical Wiring',
-      description: 'Safe electrical wiring and socket setup',
-      price: 950,
-      category: 'Electrical',
-      icon: '⚡',
-      includedItems: [
-        'Wiring safety inspection',
-        'Socket and switch testing',
-        'Minor connection repair',
-      ],
-    },
-    {
-      _id: 'svc-4',
-      title: 'Pipe Leakage Fix',
-      description: 'Plumbing services for pipe leakage and water issues',
-      price: 600,
-      category: 'Plumbing',
-      icon: '🚰',
-      includedItems: [
-        'Leak source detection',
-        'Pipe joint tightening',
-        'Water flow check',
-      ],
-    },
-    {
-      _id: 'svc-5',
-      title: 'General Home Repair',
-      description: 'Handyman services for general home maintenance tasks',
-      price: 1000,
-      category: 'Home Maintenance',
-      icon: '🛠️',
-      includedItems: [
-        'Basic damage inspection',
-        'Small fixture repair',
-        'Tool and labor support',
-      ],
-    },
-    {
-      _id: 'svc-6',
-      title: 'Math Tutoring',
-      description: 'Expert tutoring for high school and college math',
-      price: 1500,
-      category: 'Tutoring',
-      icon: '📚',
-      includedItems: [
-        'Concept review',
-        'Practice problem solving',
-        'Homework guidance',
-      ],
-    },
-    {
-      _id: 'svc-7',
-      title: 'PC & Network Setup',
-      description: 'Tech support for home and office networks and PCs',
-      price: 1200,
-      category: 'Tech Support',
-      icon: '💻',
-      includedItems: [
-        'Device setup check',
-        'Wi-Fi configuration',
-        'Basic software troubleshooting',
-      ],
-    },
-    {
-      _id: 'svc-8',
-      title: 'Bed Bug Extermination',
-      description: 'Professional pest control and extermination',
-      price: 2000,
-      category: 'Pest Control',
-      icon: '🐛',
-      includedItems: [
-        'Infestation inspection',
-        'Targeted spray treatment',
-        'Prevention advice',
-      ],
-    },
-    {
-      _id: 'svc-9',
-      title: 'Home Shifting Services',
-      description: 'Reliable moving and shifting services with transport',
-      price: 3500,
-      category: 'Shifting',
-      icon: '🚚',
-      includedItems: [
-        'Item loading support',
-        'Transport arrangement',
-        'Basic unloading help',
-      ],
-    },
-  ],
-  isOpen: true,
-  isVerified: true,
-  portfolio: [],
-  averageRating: 4.5,
-  totalJobs: 23,
-};
+const Provider = require('../models/Provider');
+const Service = require('../models/Service');
+const Booking = require('../models/Booking');
+const Review = require('../models/Review');
+const Upload = require('../models/Upload');
 
-let pendingBookings = [
-  {
-    _id: 'bk-1',
-    provider: 'provider-1',
-    service: { title: 'AC Repair' },
-    date: '2026-04-15',
-    timeSlot: '10:00',
-    totalAmount: 920,
-    status: 'pending',
-    customer: {
-      name: 'Test Customer',
-      email: 'customer@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'bk-2',
-    provider: 'provider-1',
-    service: { title: 'Deep Cleaning' },
-    date: '2026-04-16',
-    timeSlot: '14:00',
-    totalAmount: 1100,
-    status: 'pending',
-    customer: {
-      name: 'Test Customer 2',
-      email: 'customer2@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'bk-3',
-    provider: 'provider-1',
-    service: { title: 'Electrical Wiring' },
-    date: '2026-04-17',
-    timeSlot: '17:00',
-    totalAmount: 1300,
-    status: 'pending',
-    customer: {
-      name: 'Test Customer 3',
-      email: 'customer3@test.com',
-      profilePic: '',
-    },
-  },
-];
+const STATUS_PIPELINE = ['pending', 'accepted', 'on_the_way', 'in_progress', 'completed'];
 
-// All bookings (including active ones with progress statuses)
-let activeBookings = [
-  {
-    _id: 'abk-1',
-    provider: 'provider-1',
-    service: { title: 'AC Repair', _id: 'svc-1' },
-    date: '2026-05-08',
-    timeSlot: '10:00',
-    totalAmount: 1380,
-    status: 'pending',
-    customer: {
-      name: 'Rahim Uddin',
-      email: 'rahim@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'abk-2',
-    provider: 'provider-1',
-    service: { title: 'Deep Cleaning', _id: 'svc-2' },
-    date: '2026-05-09',
-    timeSlot: '14:00',
-    totalAmount: 920,
-    status: 'accepted',
-    customer: {
-      name: 'Karim Hossain',
-      email: 'karim@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'abk-3',
-    provider: 'provider-1',
-    service: { title: 'Electrical Wiring', _id: 'svc-3' },
-    date: '2026-05-10',
-    timeSlot: '09:00',
-    totalAmount: 1092,
-    status: 'on_the_way',
-    customer: {
-      name: 'Nasrin Akter',
-      email: 'nasrin@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'abk-4',
-    provider: 'provider-1',
-    service: { title: 'Pipe Leakage Fix', _id: 'svc-4' },
-    date: '2026-04-28',
-    timeSlot: '11:00',
-    totalAmount: 690,
-    status: 'completed',
-    customer: {
-      name: 'Ayesha Rahman',
-      email: 'ayesha@test.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'abk-5',
-    provider: 'provider-1',
-    service: { title: 'Deep Cleaning', _id: 'svc-2' },
-    date: '2026-05-02',
-    timeSlot: '16:00',
-    totalAmount: 920,
-    status: 'completed',
-    customer: {
-      name: 'Demo Customer',
-      email: 'customer@fixit.com',
-      profilePic: '',
-    },
-  },
-  {
-    _id: 'abk-6',
-    provider: 'provider-1',
-    service: { title: 'PC & Network Setup', _id: 'svc-7' },
-    date: '2026-05-08',
-    timeSlot: '18:00',
-    totalAmount: 1380,
-    status: 'in_progress',
-    customer: {
-      name: 'Demo Customer',
-      email: 'customer@fixit.com',
-      profilePic: '',
-    },
-  },
-];
+function toId(value) {
+  return value ? String(value) : '';
+}
 
-// Reviews and Ratings
-let reviews = [
-  {
-    _id: 'rev-1',
-    serviceId: 'svc-1',
-    customerName: 'Alice Smith',
-    rating: 5,
-    comment: 'Excellent AC repair! The technician was very polite and fixed the issue quickly.',
-    reply: 'Thank you Alice! We are glad you liked our service.',
-    date: '2026-05-01',
-  },
-  {
-    _id: 'rev-2',
-    serviceId: 'svc-1',
-    customerName: 'Bob Johnson',
-    rating: 4,
-    comment: 'Good service, but arrived 10 minutes late.',
-    reply: '',
-    date: '2026-05-03',
+function formatUser(user) {
+  if (!user) {
+    return { id: '', name: '', email: '', profilePic: '' };
   }
-];
 
-const monthlyEarnings = [
-  { label: '2026-01', amount: 2000 },
-  { label: '2026-02', amount: 1400 },
-  { label: '2026-03', amount: 1500 },
-];
+  return {
+    id: toId(user._id),
+    name: user.name || '',
+    email: user.email || '',
+    profilePic: user.profilePic || '',
+  };
+}
 
-const dailyEarnings = [
-  { label: '2026-03-01', amount: 500 },
-  { label: '2026-03-04', amount: 700 },
-  { label: '2026-03-12', amount: 300 },
-];
+function formatService(service) {
+  return {
+    _id: toId(service._id),
+    provider: toId(service.provider?._id || service.provider),
+    title: service.title || '',
+    description: service.description || '',
+    price: Number(service.price || 0),
+    category: service.category || '',
+    icon: service.icon || '',
+    includedItems: service.includedItems || [],
+  };
+}
+
+function formatProvider(provider, services = []) {
+  return {
+    _id: toId(provider._id),
+    user: formatUser(provider.user),
+    isOpen: Boolean(provider.isOpen),
+    isVerified: Boolean(provider.isVerified),
+    portfolio: provider.portfolio || [],
+    maxBookingsPerDay: provider.maxBookingsPerDay || 3,
+    averageRating: Number(provider.averageRating || 0),
+    totalJobs: Number(provider.totalJobs || 0),
+    services: services.map(formatService),
+  };
+}
+
+function formatBooking(booking, review = null) {
+  const service = booking.service || {};
+  const customer = booking.customer || {};
+
+  return {
+    _id: toId(booking._id),
+    provider: toId(booking.provider?._id || booking.provider),
+    service: {
+      _id: toId(service._id),
+      title: service.title || '',
+    },
+    date: booking.date,
+    timeSlot: booking.timeSlot,
+    totalAmount: Number(booking.totalAmount || 0),
+    status: booking.status,
+    customer: {
+      name: booking.customerName || customer.name || '',
+      email: booking.customerEmail || customer.email || '',
+      profilePic: customer.profilePic || '',
+    },
+    customerReview: review
+      ? {
+          _id: toId(review._id),
+          serviceId: toId(review.service?._id || review.service),
+          customerName: review.customerName || '',
+          rating: Number(review.rating || 0),
+          comment: review.comment || '',
+          reply: review.reply || '',
+          date: review.date,
+        }
+      : null,
+  };
+}
+
+function formatReview(review) {
+  return {
+    _id: toId(review._id),
+    serviceId: toId(review.service?._id || review.service),
+    serviceTitle: review.serviceTitle || review.service?.title || '',
+    customerName: review.customerName || '',
+    rating: Number(review.rating || 0),
+    comment: review.comment || '',
+    reply: review.reply || '',
+    date: review.date,
+  };
+}
+
+async function getCurrentProvider(userId) {
+  return Provider.findOne({ user: userId }).populate('user');
+}
+
+async function refreshProviderStats(providerId) {
+  const services = await Service.find({ provider: providerId }).select('_id').lean();
+  const serviceIds = services.map((service) => service._id);
+
+  const reviewAggregate = await Review.aggregate([
+    { $match: { service: { $in: serviceIds } } },
+    { $group: { _id: null, averageRating: { $avg: '$rating' } } },
+  ]);
+
+  const totalJobs = await Booking.countDocuments({ provider: providerId, status: 'completed' });
+
+  await Provider.findByIdAndUpdate(providerId, {
+    averageRating: reviewAggregate[0]?.averageRating || 0,
+    totalJobs,
+  });
+}
 
 const getDashboard = async (req, res) => {
   try {
-    return res.json(providerData);
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
+    const services = await Service.find({ provider: provider._id }).sort({ createdAt: 1 }).lean();
+    return res.json(formatProvider(provider, services));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -309,8 +134,14 @@ const getDashboard = async (req, res) => {
 
 const toggleOpen = async (req, res) => {
   try {
-    providerData.isOpen = !providerData.isOpen;
-    return res.json({ isOpen: providerData.isOpen });
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
+    provider.isOpen = !provider.isOpen;
+    await provider.save();
+    return res.json({ isOpen: provider.isOpen });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -318,6 +149,11 @@ const toggleOpen = async (req, res) => {
 
 const addService = async (req, res) => {
   try {
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
     const includedItems = Array.isArray(req.body.includedItems)
       ? req.body.includedItems
       : String(req.body.includedItems || '')
@@ -325,16 +161,18 @@ const addService = async (req, res) => {
           .map((item) => item.trim())
           .filter(Boolean);
 
-    const service = {
-      _id: `svc-${Date.now()}`,
+    await Service.create({
+      provider: provider._id,
       title: req.body.title,
       description: req.body.description,
       price: Number(req.body.price),
       category: req.body.category,
+      icon: req.body.icon || '',
       includedItems,
-    };
-    providerData.services.push(service);
-    return res.json(providerData.services);
+    });
+
+    const services = await Service.find({ provider: provider._id }).sort({ createdAt: 1 }).lean();
+    return res.json(services.map(formatService));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -342,8 +180,12 @@ const addService = async (req, res) => {
 
 const editService = async (req, res) => {
   try {
-    const service = providerData.services.find((item) => item._id === req.params.serviceId);
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
 
+    const service = await Service.findOne({ _id: req.params.serviceId, provider: provider._id });
     if (!service) {
       return res.status(404).json({ message: 'Service not found' });
     }
@@ -352,14 +194,17 @@ const editService = async (req, res) => {
     service.description = req.body.description;
     service.price = Number(req.body.price);
     service.category = req.body.category;
+    service.icon = req.body.icon || service.icon;
     service.includedItems = Array.isArray(req.body.includedItems)
       ? req.body.includedItems
       : String(req.body.includedItems || '')
           .split('\n')
           .map((item) => item.trim())
           .filter(Boolean);
+    await service.save();
 
-    return res.json(providerData.services);
+    const services = await Service.find({ provider: provider._id }).sort({ createdAt: 1 }).lean();
+    return res.json(services.map(formatService));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -367,9 +212,15 @@ const editService = async (req, res) => {
 
 const deleteService = async (req, res) => {
   try {
-    providerData.services = providerData.services.filter(
-      (service) => service._id !== req.params.serviceId
-    );
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
+    const service = await Service.findOneAndDelete({ _id: req.params.serviceId, provider: provider._id });
+    if (!service) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
 
     return res.json({ message: 'Service deleted' });
   } catch (error) {
@@ -379,7 +230,17 @@ const deleteService = async (req, res) => {
 
 const getPendingRequests = async (req, res) => {
   try {
-    return res.json(pendingBookings);
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
+    const bookings = await Booking.find({ provider: provider._id, status: 'pending' })
+      .populate('service', 'title')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.json(bookings.map((booking) => formatBooking(booking)));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -387,52 +248,66 @@ const getPendingRequests = async (req, res) => {
 
 const respondToBooking = async (req, res) => {
   try {
-    const booking = pendingBookings.find((item) => item._id === req.params.bookingId);
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
 
+    const booking = await Booking.findOne({ _id: req.params.bookingId, provider: provider._id }).populate('service', 'title');
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
     booking.status = req.body.action === 'accept' ? 'accepted' : 'declined';
-    pendingBookings = pendingBookings.filter((item) => item._id !== booking._id);
-    return res.json(booking);
+    await booking.save();
+
+    return res.json(formatBooking(booking));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-// Status pipeline — the 5 stages in order
-const STATUS_PIPELINE = ['pending', 'accepted', 'on_the_way', 'in_progress', 'completed'];
-
 const updateBookingStatus = async (req, res) => {
   try {
-    const booking = activeBookings.find((item) => item._id === req.params.bookingId);
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
 
+    const booking = await Booking.findOne({ _id: req.params.bookingId, provider: provider._id }).populate('service', 'title');
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
     const currentIndex = STATUS_PIPELINE.indexOf(booking.status);
-
     if (currentIndex === -1 || currentIndex === STATUS_PIPELINE.length - 1) {
       return res.status(400).json({ message: 'Booking is already completed or has an invalid status.' });
     }
 
     booking.status = STATUS_PIPELINE[currentIndex + 1];
-    return res.json(booking);
+    await booking.save();
+
+    if (booking.status === 'completed') {
+      await refreshProviderStats(provider._id);
+    }
+
+    return res.json(formatBooking(booking));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-const getActiveBookings = async (req, res) => {
+const getActiveBookings = async (_req, res) => {
   try {
-    const bookingsWithReviews = activeBookings.map((booking) => ({
-      ...booking,
-      customerReview: reviews.find((review) => review.bookingId === booking._id) || null,
-    }));
+    const bookings = await Booking.find()
+      .populate('service', 'title')
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return res.json(bookingsWithReviews);
+    const reviews = await Review.find({ booking: { $in: bookings.map((booking) => booking._id) } }).lean();
+    const reviewMap = new Map(reviews.map((review) => [toId(review.booking), review]));
+
+    return res.json(bookings.map((booking) => formatBooking(booking, reviewMap.get(toId(booking._id)) || null)));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -440,8 +315,29 @@ const getActiveBookings = async (req, res) => {
 
 const getEarnings = async (req, res) => {
   try {
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
+    const bookings = await Booking.find({ provider: provider._id, status: 'completed' }).lean();
     const period = req.query.period === 'daily' ? 'daily' : 'monthly';
-    return res.json(period === 'daily' ? dailyEarnings : monthlyEarnings);
+    const buckets = new Map();
+
+    bookings.forEach((booking) => {
+      const key = period === 'daily' ? booking.date : String(booking.date || '').slice(0, 7);
+      if (!key) {
+        return;
+      }
+
+      buckets.set(key, (buckets.get(key) || 0) + Number(booking.totalAmount || 0));
+    });
+
+    return res.json(
+      Array.from(buckets.entries())
+        .sort(([a], [b]) => String(a).localeCompare(String(b)))
+        .map(([label, amount]) => ({ label, amount: Number(amount.toFixed(2)) }))
+    );
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -449,24 +345,32 @@ const getEarnings = async (req, res) => {
 
 const uploadPortfolioPhoto = async (req, res) => {
   try {
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
     const url = `/uploads/${req.file.filename}`;
-    providerData.portfolio.push(url);
+    await Upload.create({ provider: provider._id, url });
 
-    return res.json({ url, portfolio: providerData.portfolio });
+    provider.portfolio = provider.portfolio || [];
+    provider.portfolio.push(url);
+    await provider.save();
+
+    return res.json({ url, portfolio: provider.portfolio });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-// CUSTOMER FEATURES
-
-const getAllServices = async (req, res) => {
+const getAllServices = async (_req, res) => {
   try {
-    return res.json(providerData.services);
+    const services = await Service.find().sort({ createdAt: -1 }).lean();
+    return res.json(services.map(formatService));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -474,13 +378,9 @@ const getAllServices = async (req, res) => {
 
 const getServicesByCategory = async (req, res) => {
   try {
-    const category = req.params.category.toLowerCase();
-
-    const filtered = providerData.services.filter(
-      (s) => s.category.toLowerCase() === category
-    );
-
-    return res.json(filtered);
+    const category = req.params.category;
+    const services = await Service.find({ category: new RegExp(`^${category}$`, 'i') }).sort({ createdAt: -1 }).lean();
+    return res.json(services.map(formatService));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -488,16 +388,18 @@ const getServicesByCategory = async (req, res) => {
 
 const searchServices = async (req, res) => {
   try {
-    const keyword = req.params.keyword.toLowerCase();
+    const keyword = req.params.keyword;
+    const services = await Service.find({
+      $or: [
+        { title: new RegExp(keyword, 'i') },
+        { description: new RegExp(keyword, 'i') },
+        { category: new RegExp(keyword, 'i') },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const results = providerData.services.filter(
-      (s) =>
-        s.title.toLowerCase().includes(keyword) ||
-        s.category.toLowerCase().includes(keyword) ||
-        s.description.toLowerCase().includes(keyword)
-    );
-
-    return res.json(results);
+    return res.json(services.map(formatService));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -505,111 +407,103 @@ const searchServices = async (req, res) => {
 
 const getServiceById = async (req, res) => {
   try {
-    const service = providerData.services.find((s) => s._id === req.params.id);
-
+    const service = await Service.findById(req.params.id).lean();
     if (!service) {
       return res.status(404).json({ message: 'Service not found' });
     }
 
-    return res.json(service);
+    return res.json(formatService(service));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-const getTopProviders = async (req, res) => {
+const getTopProviders = async (_req, res) => {
   try {
-    return res.json([providerData]);
+    const providers = await Provider.find().sort({ averageRating: -1, totalJobs: -1 }).limit(10).populate('user').lean();
+    const providerIds = providers.map((provider) => provider._id);
+    const services = await Service.find({ provider: { $in: providerIds } }).lean();
+
+    const servicesByProvider = services.reduce((acc, service) => {
+      const providerId = toId(service.provider);
+      if (!acc.has(providerId)) {
+        acc.set(providerId, []);
+      }
+      acc.get(providerId).push(service);
+      return acc;
+    }, new Map());
+
+    return res.json(providers.map((provider) => formatProvider(provider, servicesByProvider.get(toId(provider._id)) || [])));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-// ── BOOKING: Create ────────────────────────────────────────────────────────
 const createBooking = async (req, res) => {
   try {
-    const { serviceId, date, timeSlot, customerName } = req.body;
+    const { serviceId, date, timeSlot, customerName, customerEmail } = req.body;
 
-    // Validate required fields
     if (!serviceId || !date || !timeSlot) {
       return res.status(400).json({ message: 'serviceId, date, and timeSlot are required.' });
     }
 
-    // Ensure date is not in the past
     const chosenDate = new Date(`${date}T${timeSlot}:00`);
-    if (chosenDate <= new Date()) {
+    if (Number.isNaN(chosenDate.getTime()) || chosenDate <= new Date()) {
       return res.status(400).json({ message: 'Cannot book a date/time in the past.' });
     }
 
-    // Find the service
-    const service = providerData.services.find((s) => s._id === serviceId);
+    const service = await Service.findById(serviceId);
     if (!service) {
       return res.status(404).json({ message: 'Service not found.' });
     }
 
-    // Calculate total (same formula as the frontend display)
-    const platformFee = service.price * 0.10;
-    const tax         = service.price * 0.05;
-    const totalAmount = service.price + platformFee + tax;
+    const platformFee = Number(service.price) * 0.1;
+    const tax = Number(service.price) * 0.05;
+    const totalAmount = Number((Number(service.price) + platformFee + tax).toFixed(2));
 
-    const newBooking = {
-      _id:         `bk-${Date.now()}`,
-      provider:    'provider-1',
-      service:     { title: service.title, _id: service._id },
+    const booking = await Booking.create({
+      provider: service.provider,
+      service: service._id,
       date,
       timeSlot,
-      totalAmount: parseFloat(totalAmount.toFixed(2)),
-      status:      'pending',
-      customer: {
-        name:       customerName || 'Customer',
-        email:      'customer@fixit.com',
-        profilePic: '',
-      },
-    };
+      totalAmount,
+      status: 'pending',
+      customerName: customerName || 'Customer',
+      customerEmail: customerEmail || 'customer@fixit.com',
+    });
 
-    activeBookings.push(newBooking);
-    return res.status(201).json(newBooking);
+    const populatedBooking = await Booking.findById(booking._id).populate('service', 'title').lean();
+    return res.status(201).json(formatBooking(populatedBooking));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-// ── BOOKING: Cancel (blocked if ≤ 2 hours before appointment) ─────────────
 const cancelBooking = async (req, res) => {
   try {
-    const booking = activeBookings.find((b) => b._id === req.params.bookingId);
-
+    const booking = await Booking.findById(req.params.bookingId).lean();
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found.' });
     }
 
-    // Build the appointment DateTime from stored date + timeSlot strings
     const appointmentTime = new Date(`${booking.date}T${booking.timeSlot}:00`);
-    const now             = new Date();
-    const diffMs          = appointmentTime - now;
-    const diffHours       = diffMs / (1000 * 60 * 60);
-
-    // BLOCK if within 2 hours
+    const now = new Date();
+    const diffHours = (appointmentTime - now) / (1000 * 60 * 60);
     if (diffHours <= 2) {
-      return res.status(403).json({
-        message: `Cannot cancel — your appointment is in ${diffHours <= 0 ? 'less than 0' : diffHours.toFixed(1)} hours. Cancellations must be made at least 2 hours before the appointment.`,
-      });
+      return res.status(403).json({ message: `Cannot cancel — appointment within ${diffHours.toFixed(1)} hours.` });
     }
 
-    // Remove the booking
-    activeBookings = activeBookings.filter((b) => b._id !== req.params.bookingId);
+    await Booking.deleteOne({ _id: booking._id });
     return res.json({ message: 'Booking cancelled successfully.' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-// ── REVIEWS & RATINGS ──────────────────────────────────────────────────────
-
 const getServiceReviews = async (req, res) => {
   try {
-    const serviceReviews = reviews.filter((r) => r.serviceId === req.params.id);
-    return res.json(serviceReviews);
+    const reviews = await Review.find({ service: req.params.id }).sort({ createdAt: -1 }).lean();
+    return res.json(reviews.map(formatReview));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -623,48 +517,40 @@ const addReview = async (req, res) => {
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ message: 'Valid rating between 1 and 5 is required.' });
     }
+
     if (!comment) {
       return res.status(400).json({ message: 'Comment is required.' });
     }
 
     if (bookingId) {
-      const booking = activeBookings.find((item) => item._id === bookingId);
-
+      const booking = await Booking.findById(bookingId).lean();
       if (!booking) {
         return res.status(404).json({ message: 'Booking not found.' });
       }
-
       if (booking.status !== 'completed') {
         return res.status(400).json({ message: 'Only completed orders can be reviewed.' });
       }
-
-      if (booking.service?._id !== serviceId) {
+      if (String(booking.service) !== String(serviceId)) {
         return res.status(400).json({ message: 'Review service does not match this booking.' });
-      }
-
-      if (reviews.some((review) => review.bookingId === bookingId)) {
-        return res.status(400).json({ message: 'This order has already been reviewed.' });
       }
     }
 
-    const newReview = {
-      _id: `rev-${Date.now()}`,
-      serviceId,
-      bookingId: bookingId || null,
+    const review = await Review.create({
+      service: serviceId,
+      booking: bookingId || undefined,
       customerName: customerName || 'Anonymous',
       rating: Number(rating),
       comment,
       reply: '',
-      date: new Date().toISOString().split('T')[0],
-    };
+    });
 
-    reviews.push(newReview);
+    const service = await Service.findById(serviceId).lean();
+    if (service?.provider) {
+      await refreshProviderStats(service.provider);
+    }
 
-    // Recalculate average rating for the provider
-    const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
-    providerData.averageRating = Number((totalRating / reviews.length).toFixed(1));
-
-    return res.status(201).json(newReview);
+    const savedReview = await Review.findById(review._id).populate('service', 'title').lean();
+    return res.status(201).json(formatReview(savedReview));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -672,14 +558,24 @@ const addReview = async (req, res) => {
 
 const getProviderReviews = async (req, res) => {
   try {
-    // In this mock, all reviews belong to this single provider's services
-    // To provide context in the dashboard, we'll attach the service title
-    const enrichedReviews = reviews.map(r => {
-      const service = providerData.services.find(s => s._id === r.serviceId);
-      return { ...r, serviceTitle: service ? service.title : 'Unknown Service' };
-    });
-    
-    return res.json(enrichedReviews);
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
+    const services = await Service.find({ provider: provider._id }).select('_id title').lean();
+    const serviceMap = new Map(services.map((service) => [toId(service._id), service.title]));
+    const serviceIds = services.map((service) => service._id);
+    const reviews = await Review.find({ service: { $in: serviceIds } }).sort({ createdAt: -1 }).populate('service', 'title').lean();
+
+    return res.json(
+      reviews.map((review) =>
+        formatReview({
+          ...review,
+          serviceTitle: serviceMap.get(toId(review.service?._id || review.service)) || review.service?.title || '',
+        })
+      )
+    );
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -687,18 +583,27 @@ const getProviderReviews = async (req, res) => {
 
 const replyToReview = async (req, res) => {
   try {
-    const review = reviews.find((r) => r._id === req.params.reviewId);
-
-    if (!review) {
-      return res.status(404).json({ message: 'Review not found.' });
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
     }
 
     if (!req.body.reply) {
       return res.status(400).json({ message: 'Reply text is required.' });
     }
 
-    review.reply = req.body.reply;
-    return res.json(review);
+    const serviceIds = await Service.find({ provider: provider._id }).select('_id').lean();
+    const review = await Review.findOneAndUpdate(
+      { _id: req.params.reviewId, service: { $in: serviceIds.map((service) => service._id) } },
+      { reply: req.body.reply },
+      { new: true }
+    ).populate('service', 'title').lean();
+
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found.' });
+    }
+
+    return res.json(formatReview(review));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

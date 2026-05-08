@@ -1,4 +1,6 @@
-const DEMO_TOKEN = 'demo-provider-token';
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
 
 const protect = (req, res, next) => {
   const authHeader = req.headers.authorization || '';
@@ -8,18 +10,13 @@ const protect = (req, res, next) => {
     return res.status(401).json({ message: 'Not authorized, no token' });
   }
 
-  if (token !== DEMO_TOKEN) {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    return next();
+  } catch (err) {
     return res.status(401).json({ message: 'Not authorized, invalid token' });
   }
-
-  req.user = {
-    id: 'provider-user-1',
-    name: 'Mahadi Provider',
-    email: 'mahadi@test.com',
-    role: 'provider',
-  };
-
-  return next();
 };
 
 const providerOnly = (req, res, next) => {
@@ -33,5 +30,4 @@ const providerOnly = (req, res, next) => {
 module.exports = {
   protect,
   providerOnly,
-  DEMO_TOKEN,
 };
