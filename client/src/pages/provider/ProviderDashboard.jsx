@@ -25,7 +25,7 @@ import {
   replyToReview,
 } from '../../services/api';
 import styles from './ProviderDashboard.module.css';
-
+const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=Provider&background=random";
 const blankServiceForm = {
   title: '',
   description: '',
