@@ -26,13 +26,34 @@ import {
 } from '../../services/api';
 import styles from './ProviderDashboard.module.css';
 
+const blankServiceForm = {
+  title: '',
+  description: '',
+  price: '',
+  category: '',
+  includedItems: '',
+};
+
+const toIncludedItemsText = (items) => {
+  if (Array.isArray(items)) return items.join('\n');
+  return items || '';
+};
+
+const normalizeServiceForm = (form) => ({
+  ...form,
+  includedItems: toIncludedItemsText(form.includedItems)
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean),
+});
+
 function ServiceForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState(
-    initial || { title: '', description: '', price: '', category: '' }
+    initial ? { ...initial, includedItems: toIncludedItemsText(initial.includedItems) } : blankServiceForm
   );
 
   useEffect(() => {
-    setForm(initial || { title: '', description: '', price: '', category: '' });
+    setForm(initial ? { ...initial, includedItems: toIncludedItemsText(initial.includedItems) } : blankServiceForm);
   }, [initial]);
 
   const handleChange = (e) => {
@@ -92,8 +113,20 @@ function ServiceForm({ initial, onSave, onCancel }) {
         />
       </label>
 
+      <label className={styles.field}>
+        <span className={styles.fieldLabel}>What Is Included</span>
+        <textarea
+          className={styles.textarea}
+          name="includedItems"
+          rows={4}
+          placeholder={'Basic diagnosis\nFilter cleaning\nCooling check'}
+          value={form.includedItems}
+          onChange={handleChange}
+        />
+      </label>
+
       <div className={styles.formBtns}>
-        <button type="button" className={styles.btnPrimary} onClick={() => onSave(form)}>
+        <button type="button" className={styles.btnPrimary} onClick={() => onSave(normalizeServiceForm(form))}>
           Save
         </button>
         <button type="button" className={styles.btnGhost} onClick={onCancel}>
@@ -327,7 +360,7 @@ export default function ProviderDashboard() {
         <div className={styles.providerInfo}>
           <img
             className={styles.providerAvatar}
-            src={provider.user?.profilePic || 'https://via.placeholder.com/80'}
+            src={provider.user?.profilePic || DEFAULT_AVATAR}
             alt={provider.user?.name || 'Provider'}
           />
           <div>
@@ -417,6 +450,13 @@ export default function ProviderDashboard() {
                         <p className={styles.serviceCategory}>{service.category}</p>
                         <h4 className={styles.serviceTitle}>{service.title}</h4>
                         <p className={styles.serviceDesc}>{service.description}</p>
+                        {(service.includedItems || []).length > 0 && (
+                          <ul className={styles.serviceIncludedList}>
+                            {service.includedItems.slice(0, 3).map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                        )}
                         <p className={styles.servicePrice}>৳ {service.price}</p>
                       </div>
                       <div className={styles.serviceActions}>
@@ -458,7 +498,7 @@ export default function ProviderDashboard() {
                   <div key={booking._id} className={styles.pendingCard}>
                     <img
                       className={styles.custAvatar}
-                      src={booking.customer?.profilePic || 'https://via.placeholder.com/80'}
+                      src={booking.customer?.profilePic || DEFAULT_AVATAR}
                       alt={booking.customer?.name || 'Customer'}
                     />
                     <div className={styles.pendingInfo}>

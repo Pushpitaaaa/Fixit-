@@ -39,7 +39,10 @@ export default function CategoryPage() {
               onClick={() => navigate(`/service/${service._id}`)}
               className="service-card"
             >
-              <h3>{service.title}</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {service.icon && <span>{service.icon}</span>}
+                {service.title}
+              </h3>
               <p className="price">৳{service.price}</p>
               <p>{service.description.substring(0, 80)}...</p>
             </div>

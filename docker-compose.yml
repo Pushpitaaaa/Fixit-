@@ -1,0 +1,30 @@
+services:
+  server:
+    build:
+      context: ./Fixit-/server
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./Fixit-/server/uploads:/usr/src/app/uploads
+      - ./Fixit-/server/data:/usr/src/app/data
+    environment:
+      - NODE_ENV=development
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  client:
+    build:
+      context: ./Fixit-/client
+    ports:
+      - '3000:3000'
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - HOST=0.0.0.0
+    depends_on:
+      - server
+
+volumes:
+  server_data:

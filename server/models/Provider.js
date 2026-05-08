@@ -6,6 +6,10 @@ const serviceSchema = new mongoose.Schema(
     description: { type: String, required: true, trim: true },
     price: { type: Number, required: true },
     category: { type: String, required: true, trim: true },
+    includedItems: {
+      type: [String],
+      default: [],
+    },
   },
   { _id: true }
 );
