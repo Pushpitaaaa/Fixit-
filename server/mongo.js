@@ -1,4 +1,20 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
+
+// Allow optional override of system DNS resolvers via env var `DNS_SERVERS`
+if (process.env.DNS_SERVERS) {
+  try {
+    const servers = process.env.DNS_SERVERS.split(',').map((s) => s.trim()).filter(Boolean);
+    if (servers.length) {
+      dns.setServers(servers);
+      // eslint-disable-next-line no-console
+      console.log('Using custom DNS servers:', servers.join(','));
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('Failed to set custom DNS servers from DNS_SERVERS env:', e && e.message ? e.message : e);
+  }
+}
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/fixit';
 
