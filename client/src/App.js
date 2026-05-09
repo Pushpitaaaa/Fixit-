@@ -7,6 +7,7 @@ import CategoryPage from './pages/CategoryPage';
 import SearchPage from './pages/SearchPage';
 import ServiceDetailsPage from './pages/ServiceDetailsPage';
 import MyBookingsPage from './pages/MyBookingsPage';
+import ProviderProfilePage from './pages/ProviderProfilePage';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('token');
@@ -24,6 +25,7 @@ export default function App() {
       <Route path="/category/:category" element={<CategoryPage />} />
       <Route path="/search/:keyword" element={<SearchPage />} />
       <Route path="/service/:id" element={<ServiceDetailsPage />} />
+      <Route path="/providers/:id" element={<ProviderProfilePage />} />
       <Route path="/my-bookings" element={<MyBookingsPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />

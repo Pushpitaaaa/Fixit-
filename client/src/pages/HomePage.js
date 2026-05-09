@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { getTopProviders } from '../services/api';
 
 export default function HomePage() {
@@ -102,18 +102,18 @@ export default function HomePage() {
         {topProviders.length > 0 ? (
           <div className="services-grid">
             {topProviders.map((provider) => (
-              <div key={provider._id} className="service-card">
+              <Link key={provider._id} to={`/providers/${provider._id}`} className="service-card" style={{ textDecoration: 'none', color: 'inherit' }}>
                 <h3>{provider.user.name}</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
                   <span style={{ color: '#FFD700', fontSize: '1.2rem' }}>⭐ {provider.averageRating.toFixed(1)}</span>
                   <span style={{ color: 'var(--text-light)' }}>({provider.totalJobs} jobs)</span>
-                  {provider.isVerified && provider.totalJobs >= 20 && (
+                  {provider.isVerified && (
                     <span style={{ backgroundColor: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
                       ✅ Verified
                     </span>
                   )}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

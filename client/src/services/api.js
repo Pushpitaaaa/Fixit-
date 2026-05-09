@@ -14,6 +14,27 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Only redirect to login on protected routes if 401 is returned
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Check if the request was to a protected endpoint (contains auth-required keywords)
+      const protectedEndpoints = ['/dashboard', '/pending', '/earnings', '/reviews'];
+      const isProtected = protectedEndpoints.some((endpoint) => 
+        error.config?.url?.includes(endpoint)
+      );
+      
+      if (isProtected) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const getDashboard = async () => {
   const { data } = await api.get('/provider/dashboard');
   return data;
@@ -82,6 +103,11 @@ export const getServiceById = async (id) => {
 
 export const getTopProviders = async () => {
   const { data } = await api.get('/provider/public/top-providers');
+  return data;
+};
+
+export const getProviderById = async (id) => {
+  const { data } = await api.get(`/provider/public/providers/${id}`);
   return data;
 };
 
