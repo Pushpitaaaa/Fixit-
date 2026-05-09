@@ -14,6 +14,7 @@ const {
   searchServices,
   getServiceById,
   getTopProviders,
+  getProviderById,
   updateBookingStatus,
   getActiveBookings,
   createBooking,
@@ -49,6 +50,7 @@ router.get('/public/services/category/:category', getServicesByCategory);
 router.get('/public/services/search/:keyword', searchServices);
 router.get('/public/services/:id', getServiceById);
 router.get('/public/top-providers', getTopProviders);
+router.get('/public/providers/:id', getProviderById);
 // Customer: read all bookings (for the tracking page)
 router.get('/public/bookings', getActiveBookings);
 // Customer: create a new booking

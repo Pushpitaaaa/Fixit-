@@ -41,7 +41,8 @@ function formatProvider(provider, services = []) {
     _id: toId(provider._id),
     user: formatUser(provider.user),
     isOpen: Boolean(provider.isOpen),
-    isVerified: Boolean(provider.isVerified),
+    // provider is considered verified if already marked or has completed more than 23 jobs
+    isVerified: Boolean(provider.isVerified) || (Number(provider.totalJobs || 0) > 23),
     portfolio: provider.portfolio || [],
     maxBookingsPerDay: provider.maxBookingsPerDay || 3,
     averageRating: Number(provider.averageRating || 0),
@@ -420,7 +421,13 @@ const getServiceById = async (req, res) => {
 
 const getTopProviders = async (_req, res) => {
   try {
-    const providers = await Provider.find().sort({ averageRating: -1, totalJobs: -1 }).limit(10).populate('user').lean();
+    // Only providers with averageRating > 0, sorted by rating then completed jobs
+    const providers = await Provider.find({ averageRating: { $gt: 0 } })
+      .sort({ averageRating: -1, totalJobs: -1 })
+      .limit(5)
+      .populate('user')
+      .lean();
+
     const providerIds = providers.map((provider) => provider._id);
     const services = await Service.find({ provider: { $in: providerIds } }).lean();
 
@@ -434,6 +441,18 @@ const getTopProviders = async (_req, res) => {
     }, new Map());
 
     return res.json(providers.map((provider) => formatProvider(provider, servicesByProvider.get(toId(provider._id)) || [])));
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const getProviderById = async (req, res) => {
+  try {
+    const provider = await Provider.findById(req.params.id).populate('user').lean();
+    if (!provider) return res.status(404).json({ message: 'Provider not found' });
+
+    const services = await Service.find({ provider: provider._id }).sort({ createdAt: -1 }).lean();
+    return res.json(formatProvider(provider, services));
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -624,6 +643,7 @@ module.exports = {
   searchServices,
   getServiceById,
   getTopProviders,
+  getProviderById,
   updateBookingStatus,
   getActiveBookings,
   createBooking,
