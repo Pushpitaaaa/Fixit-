@@ -20,7 +20,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Check if the request was to a protected endpoint (contains auth-required keywords)
-      const protectedEndpoints = ['/dashboard', '/pending', '/earnings', '/reviews'];
+      const protectedEndpoints = ['/dashboard', '/pending', '/earnings', '/reviews', '/bookings'];
       const isProtected = protectedEndpoints.some((endpoint) => 
         error.config?.url?.includes(endpoint)
       );
@@ -62,6 +62,11 @@ export const deleteService = async (id) => {
 
 export const getPendingRequests = async () => {
   const { data } = await api.get('/provider/pending');
+  return data;
+};
+
+export const getProviderActiveBookings = async () => {
+  const { data } = await api.get('/provider/bookings/active');
   return data;
 };
 

@@ -57,6 +57,8 @@ function OrderInvoice({ booking, onDownload }) {
   const serviceFee = Number(booking.totalAmount || 0) / 1.15;
   const platformFee = serviceFee * 0.10;
   const tax = serviceFee * 0.05;
+  const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const customerName = booking.customer?.name || currentUser?.name || 'Customer';
 
   return (
     <div className="invoice-preview">
@@ -72,7 +74,7 @@ function OrderInvoice({ booking, onDownload }) {
 
       <div className="invoice-grid">
         <span>Customer</span>
-        <strong>{booking.customer?.name || 'Demo Customer'}</strong>
+        <strong>{customerName}</strong>
         <span>Service</span>
         <strong>{booking.service?.title || 'Service booking'}</strong>
         <span>Appointment</span>
@@ -100,6 +102,8 @@ function OrderReviewForm({ booking, onReviewSubmitted }) {
   const [message, setMessage] = useState('');
   const serviceId = booking.service?._id;
   const existingReview = booking.customerReview;
+  const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const customerName = booking.customer?.name || currentUser?.name || 'Customer';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -111,7 +115,7 @@ function OrderReviewForm({ booking, onReviewSubmitted }) {
     try {
       const review = await addServiceReview(serviceId, {
         bookingId: booking._id,
-        customerName: booking.customer?.name || 'Demo Customer',
+        customerName,
         rating,
         comment: comment.trim(),
       });
@@ -191,6 +195,8 @@ function OrderCard({ booking, cancelStatus, onCancel, onDownloadInvoice, onRevie
   const stageIndex = getStageIndex(booking.status);
   const stageInfo = STAGES[stageIndex];
   const isCompleted = booking.status === 'completed';
+  const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const customerName = booking.customer?.name || currentUser?.name || 'Customer';
   let isCancelable = false;
 
   if (!isCompleted && booking.date && booking.timeSlot) {
@@ -203,7 +209,7 @@ function OrderCard({ booking, cancelStatus, onCancel, onDownloadInvoice, onRevie
     <div className="booking-card">
       <div className="booking-card-header">
         <div>
-          <p className="booking-customer-name">{booking.customer?.name || 'Demo Customer'}</p>
+          <p className="booking-customer-name">{customerName}</p>
           <h3 className="booking-service-title">{booking.service?.title || 'Service booking'}</h3>
           <p className="booking-meta">
             📅 {booking.date} &nbsp;⏰ {booking.timeSlot}
@@ -291,7 +297,8 @@ export default function MyBookingsPage() {
 
   const visibleOrders = activeTab === 'ongoing' ? ongoingOrders : previousOrders;
   const totalSpent = previousOrders.reduce((sum, booking) => sum + Number(booking.totalAmount || 0), 0);
-  const customerName = bookings.find((booking) => booking.customer?.name)?.customer?.name || 'Demo Customer';
+  const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const customerName = bookings.find((booking) => booking.customer?.name)?.customer?.name || currentUser?.name || 'Customer';
 
   const handleCancel = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
@@ -322,7 +329,7 @@ export default function MyBookingsPage() {
     doc.text('FixIt Invoice', 105, 20, null, null, 'center');
     doc.setFontSize(12);
     doc.text(`Invoice ID: ${booking._id}`, 20, 40);
-    doc.text(`Customer: ${booking.customer?.name || 'Demo Customer'}`, 20, 50);
+    doc.text(`Customer: ${booking.customer?.name || currentUser?.name || 'Customer'}`, 20, 50);
     doc.text(`Service: ${booking.service?.title || 'Service booking'}`, 20, 60);
     doc.text(`Appointment: ${booking.date} at ${booking.timeSlot}`, 20, 70);
     doc.text(`Status: ${booking.status}`, 20, 80);

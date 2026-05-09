@@ -19,7 +19,7 @@ import {
   respondToBooking,
   toggleOpen,
   uploadPortfolioPhoto,
-  getCustomerBookings,
+  getProviderActiveBookings,
   updateBookingStatus,
   getProviderReviews,
   replyToReview,
@@ -259,7 +259,7 @@ export default function ProviderDashboard() {
           getDashboard(),
           getPendingRequests(),
           getEarnings('monthly'),
-          getCustomerBookings(),
+          getProviderActiveBookings(),
           getProviderReviews(),
         ]);
 
@@ -307,8 +307,11 @@ export default function ProviderDashboard() {
   };
 
   const handleRespond = async (bookingId, action) => {
-    await respondToBooking(bookingId, action);
+    const updated = await respondToBooking(bookingId, action);
     setPending((prev) => prev.filter((booking) => booking._id !== bookingId));
+    if (updated.status === 'accepted') {
+      setActiveOrders((prev) => [updated, ...prev.filter((booking) => booking._id !== updated._id)]);
+    }
   };
 
   const handlePeriodChange = async (p) => {
@@ -541,7 +544,9 @@ export default function ProviderDashboard() {
               try {
                 const updated = await updateBookingStatus(bookingId);
                 setActiveOrders((prev) =>
-                  prev.map((o) => (o._id === updated._id ? updated : o))
+                  updated.status === 'completed'
+                    ? prev.filter((o) => o._id !== updated._id)
+                    : prev.map((o) => (o._id === updated._id ? updated : o))
                 );
               } catch (err) {
                 alert(err?.response?.data?.message || 'Could not advance status.');

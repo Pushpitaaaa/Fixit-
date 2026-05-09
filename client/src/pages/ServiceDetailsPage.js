@@ -16,6 +16,7 @@ export default function ServiceDetailsPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const navigate = useNavigate();
+  const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 
   const platformFeePercentage = 10; // 10%
   const taxPercentage = 5; // 5%
@@ -64,11 +65,17 @@ export default function ServiceDetailsPage() {
     setErrorMsg('');
 
     try {
+      if (!currentUser) {
+        navigate('/login');
+        return;
+      }
+
       await createBooking({
         serviceId: service._id,
         date,
         timeSlot,
-        customerName: 'Demo Customer', // Hardcoded for demo purposes
+        customerName: currentUser.name,
+        customerEmail: currentUser.email,
       });
       setBookingStatus('success');
     } catch (err) {

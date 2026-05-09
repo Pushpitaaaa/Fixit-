@@ -3,6 +3,7 @@ const Service = require('../models/Service');
 const Booking = require('../models/Booking');
 const Review = require('../models/Review');
 const Upload = require('../models/Upload');
+const Customer = require('../models/Customer');
 
 const STATUS_PIPELINE = ['pending', 'accepted', 'on_the_way', 'in_progress', 'completed'];
 
@@ -100,6 +101,15 @@ function formatReview(review) {
 
 async function getCurrentProvider(userId) {
   return Provider.findOne({ user: userId }).populate('user');
+}
+
+async function getCurrentCustomer(userId) {
+  return Customer.findOne({ user: userId });
+}
+
+async function getOpenProviderIds() {
+  const providers = await Provider.find({ isOpen: true }).select('_id').lean();
+  return providers.map((provider) => provider._id);
 }
 
 async function refreshProviderStats(providerId) {
@@ -298,9 +308,45 @@ const updateBookingStatus = async (req, res) => {
   }
 };
 
-const getActiveBookings = async (_req, res) => {
+const getProviderActiveBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find()
+    const provider = await getCurrentProvider(req.user.id);
+    if (!provider) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
+    const bookings = await Booking.find({
+      provider: provider._id,
+      status: { $in: ['accepted', 'on_the_way', 'in_progress'] },
+    })
+      .populate('service', 'title')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.json(bookings.map((booking) => formatBooking(booking)));
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const getCustomerBookings = async (req, res) => {
+  try {
+    const customer = await getCurrentCustomer(req.user.id);
+    const lookup = [];
+
+    if (customer) {
+      lookup.push({ customer: customer._id });
+    }
+
+    if (req.user.email) {
+      lookup.push({ customerEmail: req.user.email });
+    }
+
+    if (lookup.length === 0) {
+      return res.json([]);
+    }
+
+    const bookings = await Booking.find({ $or: lookup })
       .populate('service', 'title')
       .sort({ createdAt: -1 })
       .lean();
@@ -370,7 +416,8 @@ const uploadPortfolioPhoto = async (req, res) => {
 
 const getAllServices = async (_req, res) => {
   try {
-    const services = await Service.find().sort({ createdAt: -1 }).lean();
+    const openProviderIds = await getOpenProviderIds();
+    const services = await Service.find({ provider: { $in: openProviderIds } }).sort({ createdAt: -1 }).lean();
     return res.json(services.map(formatService));
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -380,7 +427,11 @@ const getAllServices = async (_req, res) => {
 const getServicesByCategory = async (req, res) => {
   try {
     const category = req.params.category;
-    const services = await Service.find({ category: new RegExp(`^${category}$`, 'i') }).sort({ createdAt: -1 }).lean();
+    const openProviderIds = await getOpenProviderIds();
+    const services = await Service.find({
+      provider: { $in: openProviderIds },
+      category: new RegExp(`^${category}$`, 'i'),
+    }).sort({ createdAt: -1 }).lean();
     return res.json(services.map(formatService));
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -390,7 +441,9 @@ const getServicesByCategory = async (req, res) => {
 const searchServices = async (req, res) => {
   try {
     const keyword = req.params.keyword;
+    const openProviderIds = await getOpenProviderIds();
     const services = await Service.find({
+      provider: { $in: openProviderIds },
       $or: [
         { title: new RegExp(keyword, 'i') },
         { description: new RegExp(keyword, 'i') },
@@ -413,6 +466,11 @@ const getServiceById = async (req, res) => {
       return res.status(404).json({ message: 'Service not found' });
     }
 
+    const provider = await Provider.findOne({ _id: service.provider, isOpen: true }).select('_id').lean();
+    if (!provider) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+
     return res.json(formatService(service));
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -422,7 +480,7 @@ const getServiceById = async (req, res) => {
 const getTopProviders = async (_req, res) => {
   try {
     // Only providers with averageRating > 0, sorted by rating then completed jobs
-    const providers = await Provider.find({ averageRating: { $gt: 0 } })
+    const providers = await Provider.find({ averageRating: { $gt: 0 }, isOpen: true })
       .sort({ averageRating: -1, totalJobs: -1 })
       .limit(5)
       .populate('user')
@@ -448,7 +506,7 @@ const getTopProviders = async (_req, res) => {
 
 const getProviderById = async (req, res) => {
   try {
-    const provider = await Provider.findById(req.params.id).populate('user').lean();
+    const provider = await Provider.findOne({ _id: req.params.id, isOpen: true }).populate('user').lean();
     if (!provider) return res.status(404).json({ message: 'Provider not found' });
 
     const services = await Service.find({ provider: provider._id }).sort({ createdAt: -1 }).lean();
@@ -476,6 +534,15 @@ const createBooking = async (req, res) => {
       return res.status(404).json({ message: 'Service not found.' });
     }
 
+    const provider = await Provider.findOne({ _id: service.provider, isOpen: true }).select('_id').lean();
+    if (!provider) {
+      return res.status(400).json({ message: 'This provider is currently closed for bookings.' });
+    }
+
+    const customer = await getCurrentCustomer(req.user.id);
+    const resolvedCustomerName = customer?.name || req.user.name || customerName || 'Customer';
+    const resolvedCustomerEmail = req.user.email || customerEmail || '';
+
     const platformFee = Number(service.price) * 0.1;
     const tax = Number(service.price) * 0.05;
     const totalAmount = Number((Number(service.price) + platformFee + tax).toFixed(2));
@@ -483,12 +550,13 @@ const createBooking = async (req, res) => {
     const booking = await Booking.create({
       provider: service.provider,
       service: service._id,
+      customer: customer?._id,
       date,
       timeSlot,
       totalAmount,
       status: 'pending',
-      customerName: customerName || 'Customer',
-      customerEmail: customerEmail || 'customer@fixit.com',
+      customerName: resolvedCustomerName,
+      customerEmail: resolvedCustomerEmail,
     });
 
     const populatedBooking = await Booking.findById(booking._id).populate('service', 'title').lean();
@@ -500,7 +568,19 @@ const createBooking = async (req, res) => {
 
 const cancelBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.bookingId).lean();
+    const customer = await getCurrentCustomer(req.user.id);
+    const lookup = [{ _id: req.params.bookingId }];
+
+    if (customer || req.user.email) {
+      lookup.push({
+        $or: [
+          ...(customer ? [{ customer: customer._id }] : []),
+          ...(req.user.email ? [{ customerEmail: req.user.email }] : []),
+        ],
+      });
+    }
+
+    const booking = await Booking.findOne({ $and: lookup }).lean();
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found.' });
     }
@@ -645,7 +725,8 @@ module.exports = {
   getTopProviders,
   getProviderById,
   updateBookingStatus,
-  getActiveBookings,
+  getProviderActiveBookings,
+  getCustomerBookings,
   createBooking,
   cancelBooking,
   getServiceReviews,

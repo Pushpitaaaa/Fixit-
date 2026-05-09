@@ -16,7 +16,8 @@ const {
   getTopProviders,
   getProviderById,
   updateBookingStatus,
-  getActiveBookings,
+  getProviderActiveBookings,
+  getCustomerBookings,
   createBooking,
   cancelBooking,
   getServiceReviews,
@@ -40,6 +41,7 @@ router.get('/earnings', protect, providerOnly, getEarnings);
 router.post('/portfolio', protect, providerOnly, upload.single('photo'), uploadPortfolioPhoto);
 // Provider: advance a booking's status to the next stage
 router.put('/bookings/:bookingId/status', protect, providerOnly, updateBookingStatus);
+router.get('/bookings/active', protect, providerOnly, getProviderActiveBookings);
 // Provider: get all reviews and reply to them
 router.get('/reviews', protect, providerOnly, getProviderReviews);
 router.post('/reviews/:reviewId/reply', protect, providerOnly, replyToReview);
@@ -51,12 +53,12 @@ router.get('/public/services/search/:keyword', searchServices);
 router.get('/public/services/:id', getServiceById);
 router.get('/public/top-providers', getTopProviders);
 router.get('/public/providers/:id', getProviderById);
-// Customer: read all bookings (for the tracking page)
-router.get('/public/bookings', getActiveBookings);
+// Customer: read their bookings (for the tracking page)
+router.get('/public/bookings', protect, getCustomerBookings);
 // Customer: create a new booking
-router.post('/public/bookings', createBooking);
+router.post('/public/bookings', protect, createBooking);
 // Customer: cancel a booking (2-hour rule enforced server-side)
-router.delete('/public/bookings/:bookingId', cancelBooking);
+router.delete('/public/bookings/:bookingId', protect, cancelBooking);
 // Customer: view and add reviews for a service
 router.get('/public/services/:id/reviews', getServiceReviews);
 router.post('/public/services/:id/reviews', addReview);
